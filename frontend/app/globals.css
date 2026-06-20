@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ─── BRAND: Blue (Primary) + White (Secondary) ─────────
+   Trust · Security · Intelligence · Reliability
+──────────────────────────────────────────────────────── */
+:root {
+  --brand-blue:        #0058b0;
+  --brand-blue-dark:   #003d7a;
+  --brand-blue-light:  #1a6fd4;
+  --brand-blue-soft:   #e8f2fc;
+  --brand-white:       #ffffff;
+}
+
+/* ─── LIGHT MODE (Default) — Clean White + Corporate Blue ─ */
+:root, html.light {
+  --bg-base:       #f4f8fd;
+  --bg-card:       #ffffff;
+  --bg-card2:      #f0f6ff;
+  --bg-hover:      rgba(0, 88, 176, 0.06);
+  --border:        #d6e6f7;
+  --border2:       #b8d4f0;
+  --text:          #0a2540;
+  --text-muted:    #3d6a9a;
+  --text-dim:      #6b8fb5;
+  --sidebar-bg:    #0058b0;
+  --sidebar-text:  #ffffff;
+  --sidebar-muted: rgba(255, 255, 255, 0.75);
+  --sidebar-hover: rgba(255, 255, 255, 0.12);
+  --sidebar-active:#ffffff;
+  --sidebar-active-text: #0058b0;
+  --header-bg:     #ffffff;
+  --input-bg:      #ffffff;
+  --input-border:  #b8d4f0;
+  --modal-bg:      #ffffff;
+  --accent:        #0058b0;
+  --accent-hover:  #003d7a;
+  --accent-soft:   rgba(0, 88, 176, 0.08);
+  --accent-border: rgba(0, 88, 176, 0.25);
+  --scrollbar-track: #f4f8fd;
+  --scrollbar-thumb: #b8d4f0;
+  --scrollbar-hover: #0058b0;
+}
+
+/* ─── DARK MODE — Deep Corporate Blue ─────────────────── */
+html.dark {
+  --bg-base:       #061525;
+  --bg-card:       #0c2137;
+  --bg-card2:      #081a2e;
+  --bg-hover:      rgba(26, 111, 212, 0.15);
+  --border:        #1a3d66;
+  --border2:       #0f2d4d;
+  --text:          #f0f7ff;
+  --text-muted:    #8bb8e8;
+  --text-dim:      #4a7aab;
+  --sidebar-bg:    #003d7a;
+  --sidebar-text:  #ffffff;
+  --sidebar-muted: rgba(255, 255, 255, 0.7);
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-active:#ffffff;
+  --sidebar-active-text: #003d7a;
+  --header-bg:     #081a2e;
+  --input-bg:      #081a2e;
+  --input-border:  #1a3d66;
+  --modal-bg:      #0c2137;
+  --accent:        #1a6fd4;
+  --accent-hover:  #0058b0;
+  --accent-soft:   rgba(26, 111, 212, 0.15);
+  --accent-border: rgba(26, 111, 212, 0.35);
+  --scrollbar-track: #061525;
+  --scrollbar-thumb: #1a3d66;
+  --scrollbar-hover: #1a6fd4;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* ─── BRAND GLOW ─────────────────────────────────────── */
+.brand-glow {
+  box-shadow: 0 4px 24px rgba(0, 88, 176, 0.15), 0 0 0 1px rgba(0, 88, 176, 0.08);
+}
+
+html.dark .brand-glow {
+  box-shadow: 0 4px 24px rgba(26, 111, 212, 0.12), 0 0 0 1px rgba(26, 111, 212, 0.1);
+}
+
+/* ─── THEME UTILITY CLASSES ──────────────────────────── */
+.sw-bg        { background-color: var(--bg-base) !important; }
+.sw-card      { background-color: var(--bg-card) !important; border-color: var(--border) !important; }
+.sw-input     { background-color: var(--input-bg) !important; border-color: var(--input-border) !important; color: var(--text) !important; }
+.sw-text      { color: var(--text) !important; }
+.sw-muted     { color: var(--text-muted) !important; }
+.sw-border    { border-color: var(--border) !important; }
+.sw-sidebar   { background-color: var(--sidebar-bg) !important; }
+.sw-header    { background-color: var(--header-bg) !important; border-color: var(--border) !important; }
+.sw-modal     { background-color: var(--modal-bg) !important; border-color: var(--border) !important; }
+.sw-hover:hover { background-color: var(--bg-hover) !important; }
+.sw-divider   { border-color: var(--border) !important; }
+.sw-accent    { background-color: var(--accent) !important; color: #ffffff !important; }
+.sw-accent-soft { background-color: var(--accent-soft) !important; border-color: var(--accent-border) !important; }
+.sw-btn-primary {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+  transition: background-color 0.2s ease;
+}
+.sw-btn-primary:hover { background-color: var(--accent-hover) !important; }
+
+.sw-bg, .sw-card, .sw-sidebar, .sw-header, .sw-modal, .sw-input {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+::selection {
+  background-color: rgba(0, 88, 176, 0.25);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid rgba(0, 88, 176, 0.5);
+  outline-offset: 2px;
+}
+
+/* ─── Override old Tailwind blues → Brand Blue ─────────── */
+.bg-blue-600 { background-color: var(--accent) !important; }
+.hover\:bg-blue-500:hover { background-color: var(--accent-hover) !important; }
+.text-blue-400 { color: var(--accent) !important; }
+.border-blue-500\/30 { border-color: var(--accent-border) !important; }
+.bg-blue-500\/10 { background-color: var(--accent-soft) !important; }
+.bg-blue-500\/20 { background-color: var(--accent-soft) !important; }
+.bg-blue-600\/20 { background-color: var(--accent-soft) !important; }
+.hover\:bg-blue-500\/20:hover { background-color: var(--accent-soft) !important; }
+.hover\:bg-blue-600\/30:hover { background-color: var(--accent-soft) !important; }
+.border-blue-500 { border-color: var(--accent) !important; }
