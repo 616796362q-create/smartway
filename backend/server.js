@@ -5,8 +5,29 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Allow requests from Vercel frontend and local development
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (server-to-server, mobile apps, curl)
+    if (!origin) return callback(null, true);
+    // Allow all vercel.app subdomains and localhost
+    if (
+      origin.includes('vercel.app') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
+      return callback(null, true);
+    }
+    // Allow any custom domain set in env
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Allow all for now - can restrict later
+  },
+  credentials: true
+}));
 app.use(express.json());
+
 
 // Helper function to log system activities
 async function logActivity(user, action) {
