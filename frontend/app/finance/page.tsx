@@ -147,7 +147,7 @@ export default function FinancePage() {
                     <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{i.date}</td>
                     <td className="px-4 py-3"><span className="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-1 rounded-lg font-medium">{i.source}</span></td>
                     <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{i.description}</td>
-                    <td className="px-4 py-3 font-bold text-emerald-400">${i.amount.toFixed(2)}</td>
+                    <td className="px-4 py-3 font-bold text-emerald-400">${Number(i.amount).toFixed(2)}</td>
                     <td className="px-4 py-3">
                       <button onClick={() => setConfirmDelete(i)} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
                     </td>
@@ -165,9 +165,9 @@ export default function FinancePage() {
           <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.date}</label><input type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value}))} required className={inputCls}/></div>
           <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.incomeSource}</label>
             <select value={form.source} onChange={e=>setForm(f=>({...f,source:e.target.value}))} className={inputCls}>
-              <option value="Client Payments">{lang === 'so' ? 'Lacagaha Macmiilka (Client Payments)' : 'Client Payments'}</option>
-              <option value="Contracts">{lang === 'so' ? 'Qandaraasyada (Contracts)' : 'Contracts'}</option>
-              <option value="Other Income">{lang === 'so' ? 'Dakhli Kale (Other Income)' : 'Other Income'}</option>
+              <option value="Client Payments">Lacagaha Macmiilka</option>
+              <option value="Contracts">Qandaraasyada</option>
+              <option value="Other Income">Dakhli Kale</option>
             </select>
           </div>
           <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.expenseDesc}</label><input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} required placeholder="Tusaale: Dahabshiil HQ Security Contract" className={inputCls}/></div>

@@ -3,7 +3,7 @@ import './globals.css'
 import { AppProvider } from '@/lib/AppContext'
 
 export const metadata: Metadata = {
-  title: 'SmartWay - Security Company Management System',
+  title: 'SmartWay - Nidaamka Maamulka Shirkadda Ilaalada',
   description: 'Nidaamka Maamulka Shirkada Ilaalada SmartWay',
 }
 

@@ -1,9 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { apiPost } from '@/lib/api'
+import { apiPost, pingBackend } from '@/lib/api'
 import { useApp } from '@/lib/AppContext'
-import { Shield, Sun, Moon } from 'lucide-react'
+import { Shield, Sun, Moon, Languages } from 'lucide-react'
 
 const ipt = (theme: string) =>
   `w-full text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0058b0]/20 transition-all placeholder:opacity-40 ${
@@ -19,6 +19,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [waking, setWaking] = useState(true)
+
+  // Ping backend on mount to wake up Neon DB free-tier cold start
+  useEffect(() => {
+    setWaking(true)
+    pingBackend().finally(() => setWaking(false))
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +40,7 @@ export default function LoginPage() {
         setError(t.loginError)
       }
     } catch {
-      setError(t.loginServerError)
+      setError(t.loginServerError + ' Dib u isku day.')
     } finally {
       setLoading(false)
     }
@@ -57,9 +64,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">SmartWay Security</h1>
           <p className="text-white/75 text-sm leading-relaxed">
-            {lang === 'so'
-              ? 'Nidaam xogeed oo aamin ah, casri ah, oo xirfad leh — maamulka shirkada ilaalada.'
-              : 'Trusted, intelligent, and reliable — security company management system.'}
+            Nidaam xogeed oo aamin ah, casri ah, oo xirfad leh — maamulka shirkada ilaalada.
           </p>
           <div className="mt-8 flex items-center justify-center gap-6 text-white/60 text-xs">
             <span>🔒 Secure</span>
@@ -74,13 +79,8 @@ export default function LoginPage() {
       {/* Right — White login form */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
         <div className="absolute top-4 right-4 flex items-center gap-2 print:hidden z-10">
-          <button onClick={() => setLang(lang === 'en' ? 'so' : 'en')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer"
-            style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text)' }}>
-            {lang === 'en' ? 'SOM' : 'ENG'}
-          </button>
           <button onClick={toggleTheme}
-            className="p-2 rounded-lg border transition-all cursor-pointer"
+            className="p-2 rounded-lg border transition-all cursor-pointer h-8 w-8 flex items-center justify-center"
             style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text)' }}>
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>
@@ -123,10 +123,12 @@ export default function LoginPage() {
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••" required className={inputCls} />
               </div>
-              <button type="submit" disabled={loading}
+              <button type="submit" disabled={loading || waking}
                 className="sw-btn-primary w-full font-semibold py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : waking ? (
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /><span className="text-sm">Server la xidayo...</span></>
                 ) : t.loginButton}
               </button>
             </form>

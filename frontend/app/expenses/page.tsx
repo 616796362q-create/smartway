@@ -123,7 +123,7 @@ export default function ExpensesPage() {
 
   const filteredKitchen = kitchenDaily.filter(k => k.date === selectedDate)
   const filteredExpenses = expenses.filter(e => e.category === activeTab && e.date === selectedDate)
-  const kitTotal = filteredKitchen.reduce((s, k) => s + k.amount, 0)
+  const kitTotal = filteredKitchen.reduce((s, k) => s + (Number(k.amount) || 0), 0)
 
   const isLight = theme === 'light'
   const inputCls = ipt(theme)
@@ -193,10 +193,10 @@ export default function ExpensesPage() {
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
                       <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{k.date}</td>
-                      <td className="px-4 py-3 text-red-400 font-bold text-base">${k.amount.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-red-400 font-bold text-base">${Number(k.amount).toFixed(2)}</td>
                       <td className="px-4 py-3 italic" style={{ color: 'var(--text-muted)' }}>{k.note || '—'}</td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setConfirmDelete({ id: k.id, type: 'kitchen', desc: `$${k.amount.toFixed(2)} (${k.note || 'Kitchen'})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
+                        <button onClick={() => setConfirmDelete({ id: k.id, type: 'kitchen', desc: `$${Number(k.amount).toFixed(2)} (${k.note || 'Kitchen'})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
                           <Trash2 className="w-3.5 h-3.5"/>
                         </button>
                       </td>
@@ -236,9 +236,9 @@ export default function ExpensesPage() {
                     <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{e.date}</td>
                     <td className="px-4 py-3"><span className="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-lg font-medium">{e.subCategory}</span></td>
                     <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{e.description}</td>
-                    <td className="px-4 py-3 text-red-400 font-bold">${e.amount.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-red-400 font-bold">${Number(e.amount).toFixed(2)}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => setConfirmDelete({ id: e.id, type: 'expense', desc: `${e.subCategory}: $${e.amount.toFixed(2)} (${e.description})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
+                      <button onClick={() => setConfirmDelete({ id: e.id, type: 'expense', desc: `${e.subCategory}: $${Number(e.amount).toFixed(2)} (${e.description})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
                         <Trash2 className="w-3.5 h-3.5"/>
                       </button>
                     </td>

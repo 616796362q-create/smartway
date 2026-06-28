@@ -93,7 +93,7 @@ export default function ReportsPage() {
             <FileText className="w-5 h-5 text-blue-400 print:text-slate-800"/>
             <div>
               <p className="font-bold print:text-slate-900" style={{ color: 'var(--text)' }}>{t.companyReportHeader}</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.reportDateLabel} {new Date().toLocaleDateString(lang === 'so' ? 'so-SO' : 'en-US')}</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.reportDateLabel} {new Date().toLocaleDateString('so-SO')}</p>
             </div>
           </div>
           <div className="p-5">

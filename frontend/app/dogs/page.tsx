@@ -244,15 +244,15 @@ export default function DogsPage() {
   const getDogStatusLabel = (status: string) => {
     if (status === 'Active') return t.active
     if (status === 'Inactive') return t.inactive
-    return lang === 'so' ? 'Xanuunsan' : 'Sick'
+    return 'Xanuunsan'
   }
 
   const getCPStatusLabel = (status: string) => {
-    if (status === 'Dispatched') return lang === 'so' ? 'La geeyay' : 'Dispatched'
-    return lang === 'so' ? 'La soo celiyay' : 'Returned'
+    if (status === 'Dispatched') return 'La geeyay'
+    return 'La soo celiyay'
   }
 
-  const foodTotal = dogFood.reduce((s, f) => s + f.total, 0)
+  const foodTotal = dogFood.reduce((s, f) => s + (Number(f.total) || 0), 0)
   const isLight = theme === 'light'
   const inputCls = ipt(theme)
 
@@ -311,9 +311,9 @@ export default function DogsPage() {
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
                     <td className="px-4 py-3 font-mono text-xs text-blue-400">{d.id}</td>
                     <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text)' }}>{d.breed}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{d.age} {lang==='so'?'sano':'years'}</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{d.age} sano</td>
                     <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{d.vaccinationDate}</td>
-                    <td className="px-4 py-3 text-red-400 font-semibold">${d.medicalExpense.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-red-400 font-semibold">${Number(d.medicalExpense).toFixed(2)}</td>
                     <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${BADGE[d.status]||''}`}>{getDogStatusLabel(d.status)}</span></td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
@@ -371,7 +371,7 @@ export default function DogsPage() {
                       <td className="px-4 py-3 text-yellow-400">${Number(f.egg).toFixed(2)}</td>
                       <td className="px-4 py-3 font-bold text-emerald-400">${Number(f.total).toFixed(2)}</td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setConfirmDelete({ id: f.id, type: 'food', desc: `Food Log (${f.date}): $${f.total.toFixed(2)}` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => setConfirmDelete({ id: f.id, type: 'food', desc: `Food Log (${f.date}): $${Number(f.total).toFixed(2)}` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
                       </td>
                     </tr>
                   ))}
@@ -524,7 +524,7 @@ export default function DogsPage() {
               <select value={dogForm.status} onChange={e=>setDogForm(f=>({...f,status:e.target.value}))} className={inputCls}>
                 <option value="Active">{t.active}</option>
                 <option value="Inactive">{t.inactive}</option>
-                <option value="Sick">{lang === 'so' ? 'Xanuunsan' : 'Sick'}</option>
+                <option value="Sick">Xanuunsan</option>
               </select>
             </div>
           </div>

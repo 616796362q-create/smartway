@@ -23,7 +23,7 @@ const NAV_ITEMS = [
 
 const DAYS_SO = ['Axad','Isniin','Talaado','Arbaco','Khamiis','Jimce','Sabti']
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const MONTHS = ['Jan','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Okt','Nof','Dis']
 
 function BrandBlock({ onClose }: { onClose?: () => void }) {
   return (
@@ -54,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [date, setDate] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const DAYS = lang === 'so' ? DAYS_SO : DAYS_EN
+  const DAYS = DAYS_SO
   const isLight = theme === 'light'
 
   const tick = useCallback(() => {
@@ -109,12 +109,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
           {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
         </button>
-        <button onClick={() => setLang(lang === 'so' ? 'en' : 'so')}
-          className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all"
-          style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-          <Languages className="w-3.5 h-3.5" />
-          {lang === 'so' ? 'SO' : 'EN'}
-        </button>
       </div>
       <div className="text-right ml-2">
         <p className="text-sm font-bold tabular-nums leading-tight" style={{ color: 'var(--text)' }}>{time}</p>
@@ -150,16 +144,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-muted)' }}
       >
         {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-        {isLight ? (lang === 'so' ? 'Habeynta Madow' : 'Dark Mode') : (lang === 'so' ? 'Maalinta Cad' : 'Light Mode')}
-      </button>
-      <button onClick={() => setLang(lang === 'so' ? 'en' : 'so')}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all lg:hidden"
-        style={{ color: 'var(--sidebar-muted)' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--sidebar-hover)'; (e.currentTarget as HTMLElement).style.color = '#ffffff' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-muted)' }}
-      >
-        <Languages className="w-4 h-4" />
-        {lang === 'so' ? '🇸🇴 Somali → English' : '🇬🇧 English → Somali'}
+        {isLight ? 'Habeynta Madow' : 'Maalinta Cad'}
       </button>
       <button onClick={logout}
         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
@@ -229,7 +214,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto min-w-0">
-          {children}
+          <div className="mx-auto max-w-7xl w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

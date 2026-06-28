@@ -118,9 +118,7 @@ export default function DashboardPage() {
             <p className="text-2xl font-bold" style={{ color: profit >= 0 ? '#0058b0' : '#dc2626' }}>
               ${Math.abs(profit).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               <span className="text-sm ml-2 font-medium">
-                {profit >= 0
-                  ? (lang === 'so' ? '▲ Faa\'iido' : '▲ Profit')
-                  : (lang === 'so' ? '▼ Khasaare' : '▼ Loss')}
+                {profit >= 0 ? '▲ Faa\'iido' : '▼ Khasaare'}
               </span>
             </p>
           </div>
@@ -132,7 +130,7 @@ export default function DashboardPage() {
             style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <h3 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
               <span className="w-1 h-5 rounded-full inline-block" style={{ backgroundColor: '#0058b0' }} />
-              {lang === 'so' ? 'Kharashyada Goob kasta' : 'Expenses by Category'}
+              Kharashyada Goob kasta
             </h3>
             <div className="space-y-3">
               {bkItems.map((item, i) => (
@@ -168,7 +166,7 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text)' }}>{act.action}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {act.user} · {new Date(act.timestamp).toLocaleString(lang === 'so' ? 'so-SO' : 'en-US')}
+                      {act.user} · {new Date(act.timestamp).toLocaleString('so-SO')}
                     </p>
                   </div>
                 </div>

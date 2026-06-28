@@ -51,7 +51,7 @@ export default function UsersPage() {
               <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border2)' }}>
                 <p className="text-xs" style={{ color: 'var(--text-dim)' }}>ID: {u.id}</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  {t.accessLabel} {u.role === 'Admin' ? 'Full System' : u.role === 'Manager' ? 'Staff, Payroll, Reports' : 'Finance, Expenses, Payroll'}
+                  {t.accessLabel} {u.role === 'Admin' ? 'Nidaamka oo Dhan' : u.role === 'Manager' ? 'Shaqaalaha, Mushaarka, Warbixinnada' : 'Maaliyadda, Kharashyada, Mushaarka'}
                 </p>
               </div>
             </div>

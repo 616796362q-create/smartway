@@ -52,6 +52,16 @@ export default function PayrollPage() {
   }
   useEffect(() => { load() }, [])
 
+  useEffect(() => {
+    if (form.staffId && form.month) {
+      const alreadyPaid = payroll.some(p => p.staffId === form.staffId && p.month === form.month)
+      if (alreadyPaid) {
+        setForm(f => ({ ...f, staffId: '' }))
+        setBasicSalary(0)
+      }
+    }
+  }, [form.month, form.staffId, payroll])
+
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
@@ -63,7 +73,7 @@ export default function PayrollPage() {
 
   const onStaffChange = (id: string) => {
     const s = staff.find(s => s.id === id)
-    setBasicSalary(s ? s.salary : 0)
+    setBasicSalary(s ? Number(s.salary) : 0)
     setForm(f => ({ ...f, staffId: id }))
   }
 
@@ -79,7 +89,7 @@ export default function PayrollPage() {
   }
 
   const filtered = monthFilter ? payroll.filter(p => p.month === monthFilter) : payroll
-  const totalNet = filtered.reduce((s, p) => s + p.netSalary, 0)
+  const totalNet = filtered.reduce((s, p) => s + (Number(p.netSalary) || 0), 0)
 
   const isLight = theme === 'light'
   const inputCls = ipt(theme)
@@ -116,7 +126,7 @@ export default function PayrollPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: isLight ? 'var(--bg-card2)' : 'rgba(15,23,42,0.5)' }}>
-                  {[t.staffId, t.name, lang==='so'?'Bisha':'Month', t.basicSalary, t.overtime, t.bonus, t.deduction, t.netSalaryLabel].map(h => (
+                  {[t.staffId, t.name, 'Bisha', t.basicSalary, t.overtime, t.bonus, t.deduction, t.netSalaryLabel].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                   ))}
                 </tr>
@@ -129,11 +139,11 @@ export default function PayrollPage() {
                     <td className="px-4 py-3 font-mono text-xs text-blue-400">{p.staffId}</td>
                     <td className="px-4 py-3 font-semibold whitespace-nowrap" style={{ color: 'var(--text)' }}>{p.staffName}</td>
                     <td className="px-4 py-3"><span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded-lg">{p.month}</span></td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>${p.basicSalary.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-blue-400">+${p.overtime.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-emerald-400">+${p.bonus.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-red-400">-${p.deduction.toFixed(2)}</td>
-                    <td className="px-4 py-3 font-bold text-emerald-500">${p.netSalary.toFixed(2)}</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>${Number(p.basicSalary).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-blue-400">+${Number(p.overtime).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-emerald-400">+${Number(p.bonus).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-red-400">-${Number(p.deduction).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-bold text-emerald-500">${Number(p.netSalary).toFixed(2)}</td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
@@ -155,26 +165,32 @@ export default function PayrollPage() {
             <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.selectStaff}</label>
             <select value={form.staffId} onChange={e => onStaffChange(e.target.value)} required className={inputCls}>
               <option value="">{t.selectStaffDefault}</option>
-              {staff.filter(s => s.status === 'Active' || s.status === 'Socda').map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.position}) — ${s.salary}</option>
-              ))}
+              {staff
+                .filter(s => {
+                  const isActive = s.status === 'Active' || s.status === 'Socda'
+                  const alreadyPaid = payroll.some(p => p.staffId === s.id && p.month === form.month)
+                  return isActive && !alreadyPaid
+                })
+                .map(s => (
+                  <option key={s.id} value={s.id}>{s.name} ({s.position}) — ${s.salary}</option>
+                ))}
             </select>
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{lang==='so'?'Bisha':'Month'}</label>
+            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>Bisha</label>
             <input type="month" value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))} required className={inputCls}/>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-blue-400">{lang==='so'?'Dheeraad':'Overtime'}</label>
+              <label className="text-xs block mb-1.5 font-medium animate-pulse text-blue-400">Dheeraad</label>
               <input type="number" min="0" step="0.01" value={form.overtime} onChange={e => setForm(f => ({ ...f, overtime: e.target.value }))} className={inputCls}/>
             </div>
             <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-emerald-400">{lang==='so'?'Haddiyad':'Bonus'}</label>
+              <label className="text-xs block mb-1.5 font-medium animate-pulse text-emerald-400">Haddiyad</label>
               <input type="number" min="0" step="0.01" value={form.bonus} onChange={e => setForm(f => ({ ...f, bonus: e.target.value }))} className={inputCls}/>
             </div>
             <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-red-400">{lang==='so'?'Goyn':'Deduction'}</label>
+              <label className="text-xs block mb-1.5 font-medium animate-pulse text-red-400">Goyn</label>
               <input type="number" min="0" step="0.01" value={form.deduction} onChange={e => setForm(f => ({ ...f, deduction: e.target.value }))} className={inputCls}/>
             </div>
           </div>

@@ -194,8 +194,8 @@ export const T = {
     connectionError: 'Xiriirka backend-ka la waayay!',
     // Staff page
     staffReg: 'Diiwaanka Shaqaalaha', staffCount: 'shaqaale oo diiwaangashan',
-    addStaff: 'Diiwaangeli Staff', editStaff: 'Wax ka bedel Staff',
-    name: 'Magaca Shaqaalaha', phone: 'Telefoonka', position: 'Xarafka Shaqada',
+    addStaff: 'Diiwaangeli Shaqaalaha', editStaff: 'Wax ka bedel Shaqaalaha',
+    name: 'Magaca Shaqaalaha', phone: 'Telefoonka', position: 'Jagada',
     salary: 'Mushaar ($)', startDate: 'Taariikhda Biloowga', active: 'Socda',
     inactive: 'La joojiyay', staffId: 'ID Shaqaalaha',
     deleteStaffTitle: 'Xaqiiji Tirtirka',
@@ -203,51 +203,51 @@ export const T = {
     deleteStaffWarn: '⚠️ Tani waa mid xaqiiqda ah — dib loo celin karo!',
     stopDelete: 'Jooji',
     confirmDelete: 'Haa, Masax',
-    searchPlaceholder: 'Raadi magac, ID, position...',
+    searchPlaceholder: 'Raadi magac, ID, jago...',
     // Expenses
     expensesTitle: 'Kharashyada — Kharashyada Shirkada',
     expensesSubtitle: 'Diiwaanso dhammaan kharashyada maalintii',
     addExpense: 'Geli Kharash',
-    selectDate: 'Kharashka Maalinta (Select Date):',
+    selectDate: 'Dooro Taariikhda:',
     kitchenExpTotal: 'Kharashka Jikada ee Maalinta La Doortay',
     noKitchenExp: 'Ma jiraan kharashyo jiko oo la diiwaangaliyay taariikhdan',
     noExpenses: 'Ma jiraan kharashyo la diiwaangaliyay taariikhdan',
     kitchenModalTitle: 'Geli Kharashka Jikada',
     kitchenAmountLabel: 'Lacagta Jikada Maanta ($)',
-    kitchenAmountHint: 'Geli kharashka guud ee jikada maanta — hal number kaliya',
-    noteOptional: 'Xusuus-qor (Optional)',
+    kitchenAmountHint: 'Geli kharashka guud ee jikada maanta — tiro kaliya',
+    noteOptional: 'Xusuus-qor (Haddii uu jiro)',
     expenseSubcat: 'Nooca',
     expenseDesc: 'Sharaxaad',
     addExpenseFor: 'Geli Kharashka',
     editExpense: 'Wax ka bedel Kharash',
     deleteExpenseTitle: 'Xaqiiji Tirtirka',
     deleteExpenseMsg: 'Ma hubtaa inaad tirtirto kharashkan?',
-    kitchenJiko: 'Jikada (Kitchen)',
-    fuelShidaal: 'Shidaalka (Fuel)',
-    repairsDayactir: 'Dayactirka (Repairs)',
-    utilities: 'Adeegyada (Utilities)',
-    others: 'Kale (Others)',
+    kitchenJiko: 'Jikada',
+    fuelShidaal: 'Shidaalka',
+    repairsDayactir: 'Dayactirka',
+    utilities: 'Adeegyada',
+    others: 'Kale',
     // Dogs
     dogsTitle: 'Maamulka Eeyaha',
     dogsSubtitle: 'eey oo diiwaangashan',
-    checkpointLogs: 'Diiwaanka Checkpoint-ka',
+    checkpointLogs: 'Diiwaanka Goobaha Ilaalada',
     addDog: 'Diiwaangeli Eey',
-    dogFood: 'Cuntada Log',
+    dogFood: 'Diiwaanka Cuntada',
     addFoodLog: 'Cuntada Eeyaha',
-    registerCheckpoint: 'Diiwaangeli Checkpoint Cusub',
-    activeDeployments: 'Kuwa Checkpoint-ka ku Maqan',
+    registerCheckpoint: 'Diiwaangeli Goob Ilaalo Cusub',
+    activeDeployments: 'Kuwa Goobaha Ilaalada ku Maqan',
     returnHistory: 'Diiwaanka la soo celiyay',
     away: 'maqan', returned: 'soo noqotay',
     noActiveDeployments: 'Ma jiraan eeyo maqan oo la diiwaangaliyay taariikhdan.',
     noReturnedDeployments: 'Ma jiraan diiwaano ey la soo celiyay taariikhdan.',
     markReturned: 'Soo Celi',
-    location: 'Goobta (Checkpoint Location)',
+    location: 'Goobta Ilaalada',
     dispatchTime: 'Waqtiga la qaaday (Aroortii)', returnTime: 'Waqtiga la soo celiyay (Galabtii)',
-    selectDogs: 'Dooro Eeyaha (Dogs)', selectStaff: 'Dooro Shaqaalaha (Staff)',
+    selectDogs: 'Dooro Eeyaha', selectStaff: 'Dooro Shaqaalaha',
     noDogsReg: 'Ma jiraan eeyo diiwaangashan', noStaffReg: 'Ma jiraan shaqaale diiwaangashan',
-    breed: 'Nooca (Breed)', age: "Da'da (Sano)", vaccination: 'Taariikhda Tallaalka',
+    breed: 'Nooca', age: "Da'da (Sano)", vaccination: 'Taariikhda Tallaalka',
     medicalExp: 'Caafimaad ($)',
-    dogId: 'Dog ID', checkpoint: 'Checkpoint', dogsCol: 'Eeyaha', dogsTab: 'Eeyaha', dogsExpense: 'Eeyaha',
+    dogId: 'ID Eeyga', checkpoint: 'Goobta Ilaalada', dogsCol: 'Eeyaha', dogsTab: 'Eeyaha', dogsExpense: 'Eeyaha',
     dispatchCol: 'Aroortii', returnCol: 'Galabtii',
     addDogTitle: 'Diiwaangeli Eey Cusub',
     editDogTitle: 'Cusboonaysii Eeyga',
@@ -263,11 +263,11 @@ export const T = {
     enterFoodLog: 'Geli Cuntada Eeyaha',
     noFoodLogs: 'Wax cunto ah lama gelin',
     totalFoodExpenses: 'Wadarta Kharashka Cuntada',
-    addCheckpointTitle: 'Diiwaangeli Checkpoint Cusub',
-    editCheckpointTitle: 'Cusboonaysii Checkpoint',
+    addCheckpointTitle: 'Diiwaangeli Goob Ilaalo Cusub',
+    editCheckpointTitle: 'Cusboonaysii Goobta Ilaalada',
     deleteCheckpointTitle: 'Xaqiiji Tirtirka',
-    deleteCheckpointMsg: 'Ma hubtaa inaad tirtirto diiwaankan checkpoint?',
-    activeDeploymentsLabel: 'Kuwa Checkpoint-ka ku Maqan',
+    deleteCheckpointMsg: 'Ma hubtaa inaad tirtirto diiwaankan goobta ilaalada?',
+    activeDeploymentsLabel: 'Kuwa Goobaha Ilaalada ku Maqan',
     returnHistoryLabel: 'Diiwaanka la soo celiyay',
     // Payroll
     payrollTitle: 'Maamulka Musharka',
@@ -275,7 +275,7 @@ export const T = {
     addPayroll: 'Geli Mushaar',
     selectMonth: 'Xul Bisha:',
     totalNet: 'Wadarta Net:',
-    netSalary: 'Musharka Net (Automatic)',
+    netSalary: 'Musharka Net (Automaatig)',
     netSalaryLabel: 'Musharka Net',
     enterPayroll: 'Diiwaangeli Mushaar',
     basicSalary: 'Musharka Asasiga ah ($)',
@@ -295,7 +295,7 @@ export const T = {
     plateNumber: 'Lambarka Baabuurka',
     driver: 'Wadaha',
     fuel: 'Shidaal',
-    service: 'Service',
+    service: 'Adeeg',
     repair: 'Dayactir',
     noVehicles: 'Wax baabuur ah lama gelin',
     deleteVehicleTitle: 'Xaqiiji Tirtirka',
@@ -306,27 +306,27 @@ export const T = {
     addIncome: 'Geli Dakhli',
     addIncomeTitle: 'Geli Dakhli Cusub',
     incomeSource: 'Isha Dakhliga',
-    registeredIncome: 'Dakhliga Diiwaangashan (Income)',
+    registeredIncome: 'Dakhliga Diiwaangashan',
     noIncome: 'Wax dakhli ah lama gelin',
     deleteIncomeTitle: 'Xaqiiji Tirtirka',
     deleteIncomeMsg: 'Ma hubtaa inaad tirtirto dakhligan?',
-    totalIncome: 'Dakhliga Guud (Income)',
-    totalExpenses: 'Kharashka Guud (Expenses)',
+    totalIncome: 'Dakhliga Guud',
+    totalExpenses: 'Kharashka Guud',
     profitLoss: 'Faa\'iido / Khasaare',
     profit: 'Faa\'iido',
     loss: 'Khasaare',
     // Reports
     reportsTitle: 'Warbixinnada',
     reportsSub: 'Warbixinta maaliyadeed ee shirkada',
-    excelExport: 'Excel Export',
-    printPdf: 'Print / PDF',
-    companyReportHeader: 'SmartWay Security Company — Financial Report',
+    excelExport: 'Dhoofinta Excel',
+    printPdf: 'Daabac / PDF',
+    companyReportHeader: 'Shirkadda SmartWay Security — Warbixinta Maaliyadeed',
     reportDateLabel: 'Warbixinta:',
     // Users
     usersTitle: 'Xisaabyada',
     usersSub: 'Xisaabyada nidaamka',
     noUsers: 'Wax users ah lama helin',
-    accessLabel: 'Heerka Access:',
+    accessLabel: 'Heerka Ogolaanshaha:',
     // Login
     loginTitle: 'SmartWay Security',
     loginSub: 'Nidaamka Maamulka Shirkada',
@@ -336,9 +336,9 @@ export const T = {
     loginError: 'Username ama Password khaldan!',
     loginServerError: 'Server kuma xidna. Hubi backend-ka.',
     // Dashboard
-    dashboardRealTime: 'Dashboard Real-Time',
+    dashboardRealTime: 'Xogta Tooska ah',
     dashboardSubtitle: 'Xaaladda guud ee shirkada isaga oo toos ah',
-    activeStaff: 'Staff Firfircoon',
+    activeStaff: 'Shaqaalaha Firfircoon',
     dogsTitleDashboard: 'Eeyaha Ilaalada',
     vehiclesDashboard: 'Gaadiidka',
     recentActivities: 'Dhaqdhaqaaqii U Dambeeyay',
@@ -365,9 +365,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('sw_lang') as Lang
     const savedTheme = localStorage.getItem('sw_theme') as Theme
-    if (savedLang) setLangState(savedLang)
+    setLangState('so') // Force Somali language
     // Force new Blue+White brand theme once
     if (localStorage.getItem('sw_brand') !== 'v2') {
       localStorage.setItem('sw_brand', 'v2')
@@ -388,8 +387,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   const setLang = (l: Lang) => {
-    setLangState(l)
-    localStorage.setItem('sw_lang', l)
+    setLangState('so') // Force Somali language
+    localStorage.setItem('sw_lang', 'so')
   }
 
   const toggleTheme = () => {
