@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
 import { apiGet, apiPost } from '@/lib/api'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, DollarSign, Users, TrendingUp, Calendar, ChevronRight, Banknote } from 'lucide-react'
 
 interface Staff { id: string; name: string; position: string; salary: number; status: string }
 interface PayrollRecord { id: string; staffId: string; staffName: string; month: string; basicSalary: number; overtime: number; bonus: number; deduction: number; netSalary: number }
@@ -11,27 +11,35 @@ interface PayrollRecord { id: string; staffId: string; staffName: string; month:
 function Modal({ open, onClose, children, title }: { open: boolean; onClose: () => void; children: React.ReactNode; title: string }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="rounded-2xl w-full max-w-md shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h3 className="font-semibold text-base" style={{ color: 'var(--text)' }}>{title}</h3>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X className="w-5 h-5"/></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+      <div className="w-full max-w-lg shadow-2xl" style={{
+        background: 'linear-gradient(145deg, #0f172a 0%, #1e293b 100%)',
+        border: '1px solid rgba(99,102,241,0.3)',
+        borderRadius: '24px',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+      }}>
+        <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
+          <div className="flex items-center gap-3">
+            <div style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: '10px', padding: '8px' }}>
+              <Banknote className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="font-bold text-base text-white">{title}</h3>
+          </div>
+          <button onClick={onClose} className="rounded-xl p-2 transition-all hover:bg-white/10" style={{ color: 'rgba(148,163,184,0.8)' }}>
+            <X className="w-5 h-5"/>
+          </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   )
 }
 
-const ipt = (theme: string) =>
-  `w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:opacity-40 ${
-    theme === 'light'
-      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-blue-500'
-      : 'bg-slate-900 border border-slate-600 text-white focus:border-blue-500'
-  }`
+const ipt = () =>
+  `w-full text-sm rounded-xl px-4 py-3 focus:outline-none transition-all placeholder:opacity-40 text-white font-medium`
 
 export default function PayrollPage() {
-  const { t, theme, lang } = useApp()
+  const { t, theme } = useApp()
   const [staff, setStaff] = useState<Staff[]>([])
   const [payroll, setPayroll] = useState<PayrollRecord[]>([])
   const [monthFilter, setMonthFilter] = useState('')
@@ -90,66 +98,195 @@ export default function PayrollPage() {
 
   const filtered = monthFilter ? payroll.filter(p => p.month === monthFilter) : payroll
   const totalNet = filtered.reduce((s, p) => s + (Number(p.netSalary) || 0), 0)
+  const totalBonuses = filtered.reduce((s, p) => s + (Number(p.bonus) || 0), 0)
+  const totalDeductions = filtered.reduce((s, p) => s + (Number(p.deduction) || 0), 0)
 
   const isLight = theme === 'light'
-  const inputCls = ipt(theme)
+
+  const inputStyle = {
+    background: 'rgba(15,23,42,0.8)',
+    border: '1px solid rgba(99,102,241,0.25)',
+    borderRadius: '12px',
+    color: 'white',
+    fontSize: '14px',
+    padding: '12px 16px',
+    width: '100%',
+    outline: 'none',
+    transition: 'all 0.2s',
+  }
+
+  const positionColors: Record<string, string> = {
+    Guard: '#3b82f6',
+    Supervisor: '#8b5cf6',
+    Driver: '#f59e0b',
+    Cook: '#10b981',
+    default: '#6366f1'
+  }
+  const posColor = (pos: string) => positionColors[pos] || positionColors.default
 
   return (
     <AppLayout>
-      <div className="space-y-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="space-y-6" style={{ minHeight: '100vh' }}>
+
+        {/* ── Header ── */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(15,23,42,0) 100%)',
+          border: '1px solid rgba(99,102,241,0.2)',
+          borderRadius: '20px',
+          padding: '24px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text)' }}>{t.payrollTitle}</h2>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t.payrollSub}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                borderRadius: '12px', padding: '10px',
+                boxShadow: '0 0 20px rgba(99,102,241,0.4)'
+              }}>
+                <DollarSign className="w-5 h-5 text-white" />
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
+                {t.payrollTitle}
+              </h2>
+            </div>
+            <p style={{ color: 'rgba(148,163,184,0.8)', fontSize: '13px', margin: 0 }}>{t.payrollSub}</p>
           </div>
-          <button onClick={openModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
-            <Plus className="w-4 h-4"/> {t.addPayroll}
+          <button onClick={openModal} style={{
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            border: 'none', borderRadius: '14px', color: 'white',
+            padding: '12px 22px', fontWeight: 700, fontSize: '14px',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            boxShadow: '0 4px 15px rgba(99,102,241,0.4)',
+            transition: 'all 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}
+          >
+            <Plus className="w-4 h-4" /> {t.addPayroll}
           </button>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <div>
-            <label className="text-xs mr-2 font-medium" style={{ color: 'var(--text-muted)' }}>{t.selectMonth}</label>
+        {/* ── Stats Cards ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          {[
+            { icon: <DollarSign className="w-5 h-5" />, label: 'Mushaar Wadarta', value: `$${totalNet.toFixed(2)}`, gradient: 'linear-gradient(135deg, #10b981, #059669)', glow: 'rgba(16,185,129,0.3)' },
+            { icon: <Users className="w-5 h-5" />, label: 'Shaqaalaha', value: filtered.length, gradient: 'linear-gradient(135deg, #6366f1, #4f46e5)', glow: 'rgba(99,102,241,0.3)' },
+            { icon: <TrendingUp className="w-5 h-5" />, label: 'Haddiyad', value: `$${totalBonuses.toFixed(2)}`, gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', glow: 'rgba(245,158,11,0.3)' },
+            { icon: <ChevronRight className="w-5 h-5" />, label: 'Goynta', value: `$${totalDeductions.toFixed(2)}`, gradient: 'linear-gradient(135deg, #ef4444, #dc2626)', glow: 'rgba(239,68,68,0.3)' },
+          ].map((card, i) => (
+            <div key={i} style={{
+              background: isLight ? 'white' : 'linear-gradient(145deg, #1e293b, #0f172a)',
+              border: '1px solid rgba(99,102,241,0.15)',
+              borderRadius: '18px', padding: '20px',
+              boxShadow: `0 4px 20px ${card.glow}`,
+              transition: 'transform 0.2s',
+            }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div style={{ background: card.gradient, borderRadius: '10px', padding: '8px', boxShadow: `0 0 15px ${card.glow}` }}>
+                  <span style={{ color: 'white' }}>{card.icon}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: 'white', marginBottom: '4px' }}>{card.value}</div>
+              <div style={{ fontSize: '12px', color: 'rgba(148,163,184,0.7)', fontWeight: 500 }}>{card.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Filter Bar ── */}
+        <div style={{
+          background: isLight ? 'white' : 'linear-gradient(145deg, #1e293b, #0f172a)',
+          border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: '16px', padding: '16px 20px',
+          display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Calendar className="w-4 h-4" style={{ color: '#6366f1' }} />
+            <label style={{ fontSize: '13px', color: 'rgba(148,163,184,0.9)', fontWeight: 600 }}>Bisha:</label>
             <input type="month" value={monthFilter} onChange={e => setMonthFilter(e.target.value)}
-              className={inputCls} style={{ width: 'auto' }}/>
+              style={{ ...inputStyle, width: 'auto', padding: '8px 14px', fontSize: '13px' }} />
           </div>
           {monthFilter && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2">
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.totalNet} </span>
-              <span className="text-emerald-400 font-bold">${totalNet.toFixed(2)}</span>
-            </div>
+            <button onClick={() => setMonthFilter('')} style={{
+              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: '10px', color: '#f87171', padding: '6px 14px', fontSize: '12px',
+              cursor: 'pointer', fontWeight: 600
+            }}>✕ Nadiifi</button>
           )}
         </div>
 
-        <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        {/* ── Table ── */}
+        <div style={{
+          background: isLight ? 'white' : 'linear-gradient(145deg, #1e293b, #0f172a)',
+          border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: '20px', overflow: 'hidden',
+          boxShadow: '0 4px 30px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: isLight ? 'var(--bg-card2)' : 'rgba(15,23,42,0.5)' }}>
-                  {[t.staffId, t.name, 'Bisha', t.basicSalary, t.overtime, t.bonus, t.deduction, t.netSalaryLabel].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                <tr style={{ background: 'rgba(99,102,241,0.08)', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
+                  {['ID', 'Magaca', 'Bisha', 'Mushaar Asal', 'Dheeraad', 'Haddiyad', 'Goyn', 'Mushaar Neto'].map((h, i) => (
+                    <th key={i} style={{
+                      textAlign: 'left', padding: '14px 18px',
+                      fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em',
+                      color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', whiteSpace: 'nowrap'
+                    }}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/20">
-                {filtered.map(p => (
-                  <tr key={p.id} className="transition-colors" style={{ borderBottom: '1px solid var(--border2)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
-                    <td className="px-4 py-3 font-mono text-xs text-blue-400">{p.staffId}</td>
-                    <td className="px-4 py-3 font-semibold whitespace-nowrap" style={{ color: 'var(--text)' }}>{p.staffName}</td>
-                    <td className="px-4 py-3"><span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded-lg">{p.month}</span></td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>${Number(p.basicSalary).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-blue-400">+${Number(p.overtime).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-emerald-400">+${Number(p.bonus).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-red-400">-${Number(p.deduction).toFixed(2)}</td>
-                    <td className="px-4 py-3 font-bold text-emerald-500">${Number(p.netSalary).toFixed(2)}</td>
+              <tbody>
+                {filtered.map((p, idx) => (
+                  <tr key={p.id} style={{
+                    borderBottom: '1px solid rgba(99,102,241,0.07)',
+                    transition: 'background 0.15s',
+                    animation: `fadeInUp 0.3s ease ${idx * 0.04}s both`
+                  }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.06)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '14px 18px' }}>
+                      <span style={{
+                        background: 'rgba(99,102,241,0.15)', color: '#818cf8',
+                        borderRadius: '8px', padding: '4px 10px', fontSize: '11px', fontFamily: 'monospace', fontWeight: 700
+                      }}>{p.staffId}</span>
+                    </td>
+                    <td style={{ padding: '14px 18px', fontWeight: 700, color: 'white', whiteSpace: 'nowrap' }}>{p.staffName}</td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <span style={{
+                        background: 'rgba(6,182,212,0.12)', color: '#22d3ee',
+                        borderRadius: '8px', padding: '4px 12px', fontSize: '12px', fontWeight: 600
+                      }}>{p.month}</span>
+                    </td>
+                    <td style={{ padding: '14px 18px', color: 'rgba(148,163,184,0.9)', fontWeight: 500 }}>${Number(p.basicSalary).toFixed(2)}</td>
+                    <td style={{ padding: '14px 18px', color: '#60a5fa', fontWeight: 600 }}>+${Number(p.overtime).toFixed(2)}</td>
+                    <td style={{ padding: '14px 18px', color: '#34d399', fontWeight: 600 }}>+${Number(p.bonus).toFixed(2)}</td>
+                    <td style={{ padding: '14px 18px', color: '#f87171', fontWeight: 600 }}>-${Number(p.deduction).toFixed(2)}</td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <span style={{
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2))',
+                        border: '1px solid rgba(16,185,129,0.3)',
+                        color: '#10b981', fontWeight: 800, fontSize: '14px',
+                        borderRadius: '10px', padding: '5px 14px', display: 'inline-block'
+                      }}>${Number(p.netSalary).toFixed(2)}</span>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-12" style={{ color: 'var(--text-dim)' }}>
-                      {t.noPayrollLogs}
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '60px 20px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ background: 'rgba(99,102,241,0.1)', borderRadius: '50%', padding: '20px' }}>
+                          <DollarSign className="w-8 h-8" style={{ color: 'rgba(99,102,241,0.5)' }} />
+                        </div>
+                        <p style={{ color: 'rgba(148,163,184,0.5)', fontSize: '14px', margin: 0 }}>{t.noPayrollLogs}</p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -159,12 +296,19 @@ export default function PayrollPage() {
         </div>
       </div>
 
+      {/* ── Modal ── */}
       <Modal open={modal} title={t.enterPayroll} onClose={() => setModal(false)}>
         <form onSubmit={save} className="space-y-4">
+
+          {/* Staff Select */}
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.selectStaff}</label>
-            <select value={form.staffId} onChange={e => onStaffChange(e.target.value)} required className={inputCls}>
-              <option value="">{t.selectStaffDefault}</option>
+            <label style={{ fontSize: '12px', color: 'rgba(148,163,184,0.8)', fontWeight: 600, display: 'block', marginBottom: '8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t.selectStaff}</label>
+            <select value={form.staffId} onChange={e => onStaffChange(e.target.value)} required
+              style={{ ...inputStyle, cursor: 'pointer' }}
+              onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.6)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)' }}
+              onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.25)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
+            >
+              <option value="" style={{ background: '#0f172a' }}>{t.selectStaffDefault}</option>
               {staff
                 .filter(s => {
                   const isActive = s.status === 'Active' || s.status === 'Socda'
@@ -172,41 +316,93 @@ export default function PayrollPage() {
                   return isActive && !alreadyPaid
                 })
                 .map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.position}) — ${s.salary}</option>
+                  <option key={s.id} value={s.id} style={{ background: '#0f172a' }}>{s.name} ({s.position}) — ${s.salary}</option>
                 ))}
             </select>
           </div>
+
+          {/* Month */}
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>Bisha</label>
-            <input type="month" value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))} required className={inputCls}/>
+            <label style={{ fontSize: '12px', color: 'rgba(148,163,184,0.8)', fontWeight: 600, display: 'block', marginBottom: '8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Bisha</label>
+            <input type="month" value={form.month} onChange={e => setForm(f => ({ ...f, month: e.target.value }))} required style={inputStyle}
+              onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.6)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 0 3px rgba(99,102,241,0.15)' }}
+              onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.25)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
+            />
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-blue-400">Dheeraad</label>
-              <input type="number" min="0" step="0.01" value={form.overtime} onChange={e => setForm(f => ({ ...f, overtime: e.target.value }))} className={inputCls}/>
-            </div>
-            <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-emerald-400">Haddiyad</label>
-              <input type="number" min="0" step="0.01" value={form.bonus} onChange={e => setForm(f => ({ ...f, bonus: e.target.value }))} className={inputCls}/>
-            </div>
-            <div>
-              <label className="text-xs block mb-1.5 font-medium animate-pulse text-red-400">Goyn</label>
-              <input type="number" min="0" step="0.01" value={form.deduction} onChange={e => setForm(f => ({ ...f, deduction: e.target.value }))} className={inputCls}/>
-            </div>
+
+          {/* Overtime / Bonus / Deduction */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            {[
+              { label: 'Dheeraad', key: 'overtime' as const, color: '#60a5fa', prefix: '+' },
+              { label: 'Haddiyad', key: 'bonus' as const, color: '#34d399', prefix: '+' },
+              { label: 'Goyn', key: 'deduction' as const, color: '#f87171', prefix: '-' },
+            ].map(({ label, key, color }) => (
+              <div key={key}>
+                <label style={{ fontSize: '11px', color, fontWeight: 700, display: 'block', marginBottom: '8px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</label>
+                <input type="number" min="0" step="0.01" value={form[key]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  style={{ ...inputStyle, borderColor: `${color}25` }}
+                  onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = color; (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px ${color}20` }}
+                  onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = `${color}25`; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
+                />
+              </div>
+            ))}
           </div>
+
           {/* Net Preview */}
-          <div className="border rounded-xl p-4 text-center" style={{ backgroundColor: 'var(--bg-card2)', borderColor: 'var(--border)' }}>
-            <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{t.netSalary}</p>
-            <p className="text-3xl font-bold text-emerald-400">${net.toFixed(2)}</p>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.08))',
+            border: '1px solid rgba(16,185,129,0.25)',
+            borderRadius: '16px', padding: '20px', textAlign: 'center',
+            boxShadow: '0 0 20px rgba(16,185,129,0.1)'
+          }}>
+            <p style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t.netSalary}</p>
+            <p style={{ fontSize: '36px', fontWeight: 900, color: '#10b981', margin: 0, letterSpacing: '-1px',
+              textShadow: '0 0 30px rgba(16,185,129,0.5)' }}>${net.toFixed(2)}</p>
+            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(148,163,184,0.6)' }}>Asal: <strong style={{ color: 'white' }}>${basicSalary.toFixed(2)}</strong></span>
+              <span style={{ fontSize: '12px', color: '#60a5fa' }}>+${(parseFloat(form.overtime)||0).toFixed(2)}</span>
+              <span style={{ fontSize: '12px', color: '#34d399' }}>+${(parseFloat(form.bonus)||0).toFixed(2)}</span>
+              <span style={{ fontSize: '12px', color: '#f87171' }}>-${(parseFloat(form.deduction)||0).toFixed(2)}</span>
+            </div>
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setModal(false)} className="flex-1 text-sm font-medium py-2.5 rounded-xl transition-all" style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>{t.cancel}</button>
-            <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
-              {saving ? t.saving : t.save}
-            </button>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px', paddingTop: '4px' }}>
+            <button type="button" onClick={() => setModal(false)} style={{
+              flex: 1, padding: '13px', borderRadius: '14px', border: '1px solid rgba(99,102,241,0.2)',
+              background: 'rgba(99,102,241,0.08)', color: 'rgba(148,163,184,0.9)',
+              fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s'
+            }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.15)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.08)'}
+            >{t.cancel}</button>
+            <button type="submit" disabled={saving} style={{
+              flex: 1, padding: '13px', borderRadius: '14px', border: 'none',
+              background: saving ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: 'white', fontWeight: 700, fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s', boxShadow: saving ? 'none' : '0 4px 15px rgba(99,102,241,0.4)'
+            }}
+              onMouseEnter={e => { if (!saving) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}
+            >{saving ? t.saving : t.save}</button>
           </div>
         </form>
+
+        <style>{`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
       </Modal>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </AppLayout>
   )
 }
