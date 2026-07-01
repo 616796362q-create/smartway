@@ -357,16 +357,17 @@ interface AppCtx {
 }
 
 const Ctx = createContext<AppCtx>({
-  lang: 'so', setLang: () => {}, theme: 'light', toggleTheme: () => {}, t: T.so,
+  lang: 'en', setLang: () => {}, theme: 'light', toggleTheme: () => {}, t: T.en,
 })
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('so')
+  const [lang, setLangState] = useState<Lang>('en')
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('sw_theme') as Theme
-    setLangState('so') // Force Somali language
+    const savedLang = localStorage.getItem('sw_lang') as Lang || 'en'
+    setLangState(savedLang)
     // Force new Blue+White brand theme once
     if (localStorage.getItem('sw_brand') !== 'v2') {
       localStorage.setItem('sw_brand', 'v2')
@@ -387,8 +388,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   const setLang = (l: Lang) => {
-    setLangState('so') // Force Somali language
-    localStorage.setItem('sw_lang', 'so')
+    setLangState(l)
+    localStorage.setItem('sw_lang', l)
   }
 
   const toggleTheme = () => {

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Users, CreditCard, DollarSign,
   Dog, Truck, TrendingUp, FileText, UserCheck, LogOut, Shield, Menu, X,
-  Sun, Moon, ChevronRight
+  Sun, Moon, ChevronRight, Languages
 } from 'lucide-react'
 import { useApp } from '@/lib/AppContext'
 
@@ -27,7 +27,7 @@ const MONTHS  = ['Jan','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Okt','No
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router   = useRouter()
   const pathname = usePathname()
-  const { t, theme, toggleTheme } = useApp()
+  const { t, lang, setLang, theme, toggleTheme } = useApp()
 
   const [user, setUser]               = useState<{ name: string; role: string; username: string } | null>(null)
   const [time, setTime]               = useState('')
@@ -78,9 +78,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   /* ── Sidebar Content ── */
   const SidebarNav = ({ mobile = false }: { mobile?: boolean }) => (
-    <nav style={{ padding: '8px 12px', flex: 1, overflowY: 'auto' }}>
+    <nav style={{ padding: '8px 12px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
       <div style={{ marginBottom: 8, padding: '0 8px' }}>
-        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(148,163,184,0.4)', textTransform: 'uppercase' }}>Maamulka</p>
+        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(148,163,184,0.4)', textTransform: 'uppercase' }}>{lang === 'so' ? 'Maamulka' : 'Navigation'}</p>
       </div>
       {allowed.map(({ href, labelKey, icon: Icon, color }) => {
         const active = pathname === href
@@ -209,7 +209,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column',
         background: isLight ? '#0f172a' : 'linear-gradient(180deg, #0a0f1e 0%, #070b14 100%)',
         borderRight: '1px solid rgba(99,102,241,0.12)',
-        position: 'sticky', top: 0, height: '100vh',
+        position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
       }}
         className="hidden lg:flex"
       >
@@ -281,6 +281,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.3px' }}>{time}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{date}</div>
             </div>
+            {/* Language toggle */}
+            <button onClick={() => setLang(lang === 'en' ? 'so' : 'en')} style={{
+              width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border)',
+              background: 'var(--bg-card2)', color: 'var(--text-muted)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--accent)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
+            >
+              <Languages style={{ width: 15, height: 15 }} />
+            </button>
             {/* Theme toggle */}
             <button onClick={toggleTheme} style={{
               width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border)',

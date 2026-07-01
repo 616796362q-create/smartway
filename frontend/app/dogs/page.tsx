@@ -22,13 +22,13 @@ interface CheckpointLog {
 function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="rounded-2xl w-full max-w-md shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h3 className="font-semibold text-base" style={{ color: 'var(--text)' }}>{title}</h3>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X className="w-5 h-5"/></button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'linear-gradient(135deg, #0d1424, #111827)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 24, width: '100%', maxWidth: 480, boxShadow: '0 25px 80px rgba(0,0,0,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
+          <h3 style={{ fontWeight: 700, fontSize: 16, color: 'white' }}>{title}</h3>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: 'rgba(148,163,184,0.7)', display: 'flex' }}><X style={{ width: 16, height: 16 }} /></button>
         </div>
-        <div className="p-5 max-h-[80vh] overflow-y-auto">{children}</div>
+        <div style={{ padding: 24, maxHeight: '80vh', overflowY: 'auto' }}>{children}</div>
       </div>
     </div>
   )
@@ -256,41 +256,59 @@ export default function DogsPage() {
   const isLight = theme === 'light'
   const inputCls = ipt(theme)
 
+  const TAB_CFG = [
+    { key: 'dogs', label: t.dogsTab, color: '#6366f1' },
+    { key: 'food', label: t.dogFood, color: '#10b981' },
+    { key: 'checkpoint', label: t.checkpointLogs, color: '#f59e0b' },
+  ]
+
   return (
     <AppLayout>
-      <div className="space-y-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text)' }}>{t.dogsTitle}</h2>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Premium Header */}
+        <div style={{
+          borderRadius: 20, padding: '24px 28px',
+          background: 'linear-gradient(135deg, #1c1435 0%, #2e1065 60%, #1c1435 100%)',
+          border: '1px solid rgba(139,92,246,0.3)', boxShadow: '0 8px 30px rgba(139,92,246,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', top: -40, right: -20, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'white', letterSpacing: '-0.5px', marginBottom: 5 }}>{t.dogsTitle}</h2>
+            <p style={{ fontSize: 13, color: 'rgba(221,214,254,0.75)' }}>
               {tab === 'checkpoint' ? `${checkpointLogs.length} ${t.checkpointLogs}` : `${dogs.length} ${t.dogsSubtitle}`}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
             {tab === 'checkpoint' ? (
-              <button onClick={openAddCheckpoint}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
-                <Plus className="w-4 h-4"/> {t.registerCheckpoint}
+              <button onClick={openAddCheckpoint} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                <Plus style={{ width: 16, height: 16 }} /> {t.registerCheckpoint}
               </button>
             ) : (
               <>
-                <button onClick={() => { setFoodForm({ cowMeat: '0', milk: '0', egg: '0' }); setFoodModal(true) }}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
-                  <Beef className="w-4 h-4"/> {t.addFoodLog}
+                <button onClick={() => { setFoodForm({ cowMeat: '0', milk: '0', egg: '0' }); setFoodModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.35)', borderRadius: 12, color: '#6ee7b7', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  <Beef style={{ width: 16, height: 16 }} /> {t.addFoodLog}
                 </button>
-                <button onClick={openAddDog} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
-                  <Plus className="w-4 h-4"/> {t.addDog}
+                <button onClick={openAddDog} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                  <Plus style={{ width: 16, height: 16 }} /> {t.addDog}
                 </button>
               </>
             )}
           </div>
         </div>
 
-        {/* Sub tabs */}
-        <div className="flex gap-1 rounded-xl p-1 w-fit flex-wrap" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <button onClick={() => setTab('dogs')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab==='dogs'?'bg-blue-600 text-white':'hover:bg-slate-700/10'}`} style={{ color: tab==='dogs'?'#ffffff':'var(--text-muted)' }}>{t.dogsTab}</button>
-          <button onClick={() => setTab('food')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab==='food'?'bg-blue-600 text-white':'hover:bg-slate-700/10'}`} style={{ color: tab==='food'?'#ffffff':'var(--text-muted)' }}>{t.dogFood}</button>
-          <button onClick={() => setTab('checkpoint')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab==='checkpoint'?'bg-blue-600 text-white':'hover:bg-slate-700/10'}`} style={{ color: tab==='checkpoint'?'#ffffff':'var(--text-muted)' }}>{t.checkpointLogs}</button>
+        {/* Premium Sub Tabs */}
+        <div style={{ display: 'flex', gap: 6, background: isLight ? 'white' : 'rgba(13,20,36,0.8)', padding: 6, borderRadius: 16, border: '1px solid rgba(99,102,241,0.12)', width: 'fit-content' }}>
+          {TAB_CFG.map(({ key, label, color }) => (
+            <button key={key} onClick={() => setTab(key as any)} style={{
+              padding: '9px 18px', borderRadius: 11, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+              background: tab === key ? `${color}18` : 'transparent',
+              color: tab === key ? color : 'rgba(148,163,184,0.7)',
+              border: tab === key ? `1px solid ${color}35` : '1px solid transparent',
+            }}>{label}</button>
+          ))}
         </div>
 
         {/* Dogs table */}

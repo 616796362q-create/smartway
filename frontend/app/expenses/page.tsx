@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
 import { apiGet, apiPost, apiDelete } from '@/lib/api'
-import { Plus, Trash2, X, UtensilsCrossed, Fuel, Wrench, Zap, MoreHorizontal, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, X, UtensilsCrossed, Fuel, Wrench, Zap, MoreHorizontal, AlertTriangle, DollarSign } from 'lucide-react'
 
 const TABS = (t: any) => [
-  { key: 'Kitchen', label: t.kitchenJiko, icon: UtensilsCrossed },
-  { key: 'Fuel', label: t.fuelShidaal, icon: Fuel },
-  { key: 'Repairs', label: t.repairsDayactir, icon: Wrench },
-  { key: 'Utilities', label: t.utilities, icon: Zap },
-  { key: 'Others', label: t.others, icon: MoreHorizontal },
+  { key: 'Kitchen', label: t.kitchenJiko, icon: UtensilsCrossed, color: '#f43f5e' },
+  { key: 'Fuel', label: t.fuelShidaal, icon: Fuel, color: '#f59e0b' },
+  { key: 'Repairs', label: t.repairsDayactir, icon: Wrench, color: '#8b5cf6' },
+  { key: 'Utilities', label: t.utilities, icon: Zap, color: '#06b6d4' },
+  { key: 'Others', label: t.others, icon: MoreHorizontal, color: '#10b981' },
 ]
 
 const SUBCATS: Record<string, string[]> = {
@@ -27,24 +27,17 @@ interface KitchenEntry { id: string; date: string; amount: number; note: string 
 function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="rounded-2xl w-full max-w-md shadow-2xl" style={{ backgroundColor: 'var(--modal-bg)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <h3 className="font-semibold text-base" style={{ color: 'var(--text)' }}>{title}</h3>
-          <button onClick={onClose} style={{ color: 'var(--text-muted)' }}><X className="w-5 h-5"/></button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: 'linear-gradient(135deg, #0d1424, #111827)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 24, width: '100%', maxWidth: 480, boxShadow: '0 25px 80px rgba(0,0,0,0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
+          <h3 style={{ fontWeight: 700, fontSize: 16, color: 'white' }}>{title}</h3>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: 'rgba(148,163,184,0.7)', display: 'flex' }}><X style={{ width: 16, height: 16 }} /></button>
         </div>
-        <div className="p-5">{children}</div>
+        <div style={{ padding: 24 }}>{children}</div>
       </div>
     </div>
   )
 }
-
-const ipt = (theme: string) =>
-  `w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:opacity-40 ${
-    theme === 'light'
-      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-blue-500'
-      : 'bg-slate-900 border border-slate-600 text-white focus:border-blue-500'
-  }`
 
 export default function ExpensesPage() {
   const { t, theme } = useApp()
@@ -56,29 +49,22 @@ export default function ExpensesPage() {
   const [form, setForm] = useState({ subCategory: '', description: '', amount: '' })
   const [kitForm, setKitForm] = useState({ amount: '', note: '' })
   const [saving, setSaving] = useState(false)
-
-  // Confirm delete modal state
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; type: 'kitchen' | 'expense'; desc?: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const isLight = theme === 'light'
   const getUser = () => { try { return JSON.parse(localStorage.getItem('sw_user') || '{}') } catch { return {} } }
   const today = new Date().toISOString().split('T')[0]
+  const tabs = TABS(t)
+  const activeColor = tabs.find(tb => tb.key === activeTab)?.color || '#6366f1'
 
   const load = async () => {
     try {
-      const [e, k] = await Promise.all([
-        apiGet('/expenses'),
-        apiGet('/kitchen-daily'),
-      ])
+      const [e, k] = await Promise.all([apiGet('/expenses'), apiGet('/kitchen-daily')])
       setExpenses(e || []); setKitchenDaily(k || [])
-    } catch {
-      setExpenses([]); setKitchenDaily([])
-    }
+    } catch { setExpenses([]); setKitchenDaily([]) }
   }
-  useEffect(() => {
-    load()
-    setSelectedDate(new Date().toISOString().split('T')[0])
-  }, [])
+  useEffect(() => { load(); setSelectedDate(today) }, [])
 
   const openModal = () => {
     if (activeTab === 'Kitchen') setKitForm({ amount: '', note: '' })
@@ -125,132 +111,138 @@ export default function ExpensesPage() {
   const filteredExpenses = expenses.filter(e => e.category === activeTab && e.date === selectedDate)
   const kitTotal = filteredKitchen.reduce((s, k) => s + (Number(k.amount) || 0), 0)
 
-  const isLight = theme === 'light'
-  const inputCls = ipt(theme)
-  const tabs = TABS(t)
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 13, fontWeight: 500,
+    background: isLight ? '#f8faff' : 'rgba(7,11,20,0.8)',
+    border: '1px solid rgba(99,102,241,0.2)', color: isLight ? '#0f172a' : 'white',
+    outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+  }
 
   return (
     <AppLayout>
-      <div className="space-y-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--text)' }}>{t.expensesTitle}</h2>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t.expensesSubtitle}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Header */}
+        <div style={{
+          borderRadius: 20, padding: '24px 28px',
+          background: 'linear-gradient(135deg, #7c1d1d 0%, #991b1b 60%, #7c1d1d 100%)',
+          border: '1px solid rgba(244,63,94,0.3)', boxShadow: '0 8px 30px rgba(244,63,94,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', top: -40, right: -20, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(244,63,94,0.2) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DollarSign style={{ width: 20, height: 20, color: 'white' }} />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>{t.expensesTitle}</h2>
+            </div>
+            <p style={{ fontSize: 13, color: 'rgba(254,202,202,0.8)' }}>{t.expensesSubtitle}</p>
           </div>
-          <button onClick={openModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
-            <Plus className="w-4 h-4"/> {t.addExpense}
+          <button onClick={openModal} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px',
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.25)'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.15)'}
+          >
+            <Plus style={{ width: 16, height: 16 }} /> {t.addExpense}
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 rounded-xl p-1 overflow-x-auto" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
-                ${activeTab === key ? 'bg-blue-600 text-white' : 'hover:bg-slate-700/10'}`}
-              style={{ color: activeTab === key ? '#ffffff' : 'var(--text-muted)' }}>
-              <Icon className="w-4 h-4"/>{label}
+        <div style={{ display: 'flex', gap: 6, background: isLight ? 'white' : 'rgba(13,20,36,0.8)', padding: 6, borderRadius: 16, border: '1px solid rgba(99,102,241,0.12)', overflowX: 'auto' }}>
+          {tabs.map(({ key, label, icon: Icon, color }) => (
+            <button key={key} onClick={() => setActiveTab(key)} style={{
+              display: 'flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 11,
+              fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.2s',
+              background: activeTab === key ? `${color}18` : 'transparent',
+              color: activeTab === key ? color : 'rgba(148,163,184,0.7)',
+              border: activeTab === key ? `1px solid ${color}35` : '1px solid transparent',
+            }}>
+              <Icon style={{ width: 14, height: 14 }} />{label}
             </button>
           ))}
         </div>
 
-        {/* Date filter picker */}
-        <div className="flex items-center gap-3 rounded-2xl p-4 flex-wrap" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          <label className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t.selectDate}</label>
-          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
-            className={inputCls} style={{ width: 'auto' }}/>
+        {/* Date filter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', borderRadius: 16, border: '1px solid rgba(99,102,241,0.12)', flexWrap: 'wrap' }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>{t.selectDate}</label>
+          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ ...inp, width: 'auto', padding: '8px 12px' }}
+            onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)'}
+            onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
           {selectedDate !== today && (
-            <button onClick={() => setSelectedDate(today)}
-              className="text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 font-medium px-3 py-2 rounded-xl transition-all cursor-pointer">
+            <button onClick={() => setSelectedDate(today)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818cf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               {t.returnToToday}
             </button>
           )}
         </div>
 
-        {/* Kitchen: Daily price view */}
+        {/* Kitchen view */}
         {activeTab === 'Kitchen' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl p-4 flex items-center justify-between" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ borderRadius: 16, padding: '18px 20px', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', border: '1px solid rgba(244,63,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t.kitchenExpTotal}</p>
-                <p className="text-2xl font-bold text-red-400">${kitTotal.toFixed(2)}</p>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(148,163,184,0.6)', marginBottom: 4, textTransform: 'uppercase' }}>{t.kitchenExpTotal}</div>
+                <div style={{ fontSize: 28, fontWeight: 900, color: '#f43f5e' }}>${kitTotal.toFixed(2)}</div>
               </div>
-              <UtensilsCrossed className="w-8 h-8 opacity-30" style={{ color: 'var(--text-muted)' }}/>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(244,63,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <UtensilsCrossed style={{ width: 22, height: 22, color: '#f43f5e' }} />
+              </div>
             </div>
-            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-              <table className="w-full text-sm">
+            <div style={{ borderRadius: 18, overflow: 'hidden', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', border: '1px solid rgba(99,102,241,0.12)' }}>
+              <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: isLight ? 'var(--bg-card2)' : 'rgba(15,23,42,0.5)' }}>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.date}</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.kitchenAmountLabel}</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.note}</th>
-                    <th className="px-4 py-3"></th>
+                  <tr style={{ background: isLight ? '#f1f5ff' : 'rgba(99,102,241,0.06)', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+                    {[t.date, t.kitchenAmountLabel, t.note, ''].map(h => <th key={h} style={{ textAlign: 'left', padding: '14px 16px', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>)}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/20">
+                <tbody>
                   {filteredKitchen.map(k => (
-                    <tr key={k.id} className="transition-colors" style={{ borderBottom: '1px solid var(--border2)' }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)'}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
-                      <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{k.date}</td>
-                      <td className="px-4 py-3 text-red-400 font-bold text-base">${Number(k.amount).toFixed(2)}</td>
-                      <td className="px-4 py-3 italic" style={{ color: 'var(--text-muted)' }}>{k.note || '—'}</td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => setConfirmDelete({ id: k.id, type: 'kitchen', desc: `$${Number(k.amount).toFixed(2)} (${k.note || 'Kitchen'})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
-                          <Trash2 className="w-3.5 h-3.5"/>
-                        </button>
+                    <tr key={k.id} style={{ borderBottom: '1px solid rgba(99,102,241,0.06)', transition: 'background 0.15s' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(244,63,94,0.04)' : 'rgba(244,63,94,0.07)'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                      <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.8)' }}>{k.date}</td>
+                      <td style={{ padding: '14px 16px', fontWeight: 800, color: '#f43f5e', fontSize: 16 }}>${Number(k.amount).toFixed(2)}</td>
+                      <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.6)', fontStyle: 'italic' }}>{k.note || '—'}</td>
+                      <td style={{ padding: '14px 16px' }}>
+                        <button onClick={() => setConfirmDelete({ id: k.id, type: 'kitchen', desc: `$${Number(k.amount).toFixed(2)} (${k.note || 'Kitchen'})` })} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 style={{ width: 13, height: 13 }} /></button>
                       </td>
                     </tr>
                   ))}
-                  {filteredKitchen.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center py-8 italic" style={{ color: 'var(--text-dim)' }}>
-                        {t.noKitchenExp}
-                      </td>
-                    </tr>
-                  )}
+                  {filteredKitchen.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'rgba(100,116,139,0.6)', fontStyle: 'italic' }}>{t.noKitchenExp}</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {/* Other tabs: standard expense list */}
+        {/* Other expense tabs */}
         {activeTab !== 'Kitchen' && (
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <table className="w-full text-sm">
+          <div style={{ borderRadius: 18, overflow: 'hidden', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', border: '1px solid rgba(99,102,241,0.12)' }}>
+            <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: isLight ? 'var(--bg-card2)' : 'rgba(15,23,42,0.5)' }}>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.date}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.expenseSubcat}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.expenseDesc}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{t.amount}</th>
-                  <th className="px-4 py-3"></th>
+                <tr style={{ background: isLight ? '#f1f5ff' : 'rgba(99,102,241,0.06)', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+                  {[t.date, t.expenseSubcat, t.expenseDesc, t.amount, ''].map(h => <th key={h} style={{ textAlign: 'left', padding: '14px 16px', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>)}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/20">
+              <tbody>
                 {filteredExpenses.map(e => (
-                  <tr key={e.id} className="transition-colors" style={{ borderBottom: '1px solid var(--border2)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
-                    <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{e.date}</td>
-                    <td className="px-4 py-3"><span className="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-lg font-medium">{e.subCategory}</span></td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text)' }}>{e.description}</td>
-                    <td className="px-4 py-3 text-red-400 font-bold">${Number(e.amount).toFixed(2)}</td>
-                    <td className="px-4 py-3">
-                      <button onClick={() => setConfirmDelete({ id: e.id, type: 'expense', desc: `${e.subCategory}: $${Number(e.amount).toFixed(2)} (${e.description})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center">
-                        <Trash2 className="w-3.5 h-3.5"/>
-                      </button>
+                  <tr key={e.id} style={{ borderBottom: '1px solid rgba(99,102,241,0.06)', transition: 'background 0.15s' }}
+                    onMouseEnter={row => (row.currentTarget as HTMLElement).style.background = isLight ? `${activeColor}06` : `${activeColor}09`}
+                    onMouseLeave={row => (row.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.8)' }}>{e.date}</td>
+                    <td style={{ padding: '14px 16px' }}><span style={{ padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700, background: `${activeColor}15`, color: activeColor, border: `1px solid ${activeColor}30` }}>{e.subCategory}</span></td>
+                    <td style={{ padding: '14px 16px', color: isLight ? '#0f172a' : 'rgba(241,245,249,0.85)' }}>{e.description}</td>
+                    <td style={{ padding: '14px 16px', fontWeight: 800, color: '#f43f5e' }}>${Number(e.amount).toFixed(2)}</td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <button onClick={() => setConfirmDelete({ id: e.id, type: 'expense', desc: `${e.subCategory}: $${Number(e.amount).toFixed(2)}` })} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 style={{ width: 13, height: 13 }} /></button>
                     </td>
                   </tr>
                 ))}
-                {filteredExpenses.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 italic" style={{ color: 'var(--text-dim)' }}>
-                      {t.noExpenses}
-                    </td>
-                  </tr>
-                )}
+                {filteredExpenses.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'rgba(100,116,139,0.6)', fontStyle: 'italic' }}>{t.noExpenses}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -259,87 +251,76 @@ export default function ExpensesPage() {
 
       {/* Kitchen Modal */}
       <Modal open={modal && activeTab === 'Kitchen'} title={t.kitchenModalTitle} onClose={() => setModal(false)}>
-        <form onSubmit={saveKitchen} className="space-y-4">
-          <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 flex items-center gap-2" style={{ borderColor: 'var(--border)' }}>
-            <span className="text-xs text-slate-500">📅 {t.date}:</span>
-            <span className="text-sm font-semibold text-blue-400">{selectedDate || today}</span>
-            <span className="text-xs text-slate-500 ml-auto">{t.automatic}</span>
+        <form onSubmit={saveKitchen} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', fontSize: 13, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 8 }}>
+            📅 <span style={{ fontWeight: 700 }}>{selectedDate || today}</span><span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(148,163,184,0.5)' }}>{t.automatic}</span>
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.kitchenAmountLabel}</label>
-            <input type="number" min="0.01" step="0.01" value={kitForm.amount}
-              onChange={e => setKitForm(f => ({ ...f, amount: e.target.value }))} required
-              placeholder="Tusaale: 10" className={inputCls}/>
-            <p className="text-xs text-slate-500 mt-1">{t.kitchenAmountHint}</p>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.kitchenAmountLabel}</label>
+            <input type="number" min="0.01" step="0.01" value={kitForm.amount} onChange={e => setKitForm(f => ({ ...f, amount: e.target.value }))} required placeholder="10.00" style={inp}
+              onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(244,63,94,0.5)'}
+              onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
+            <p style={{ fontSize: 11, color: 'rgba(100,116,139,0.6)', marginTop: 4 }}>{t.kitchenAmountHint}</p>
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.noteOptional}</label>
-            <input type="text" value={kitForm.note} onChange={e => setKitForm(f => ({ ...f, note: e.target.value }))}
-              placeholder="Tusaale: Rice, Hilib iyo Caano..." className={inputCls}/>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.noteOptional}</label>
+            <input value={kitForm.note} onChange={e => setKitForm(f => ({ ...f, note: e.target.value }))} placeholder="Rice, Meat, Milk..." style={inp}
+              onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)'}
+              onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setModal(false)} className="flex-1 text-sm font-medium py-2.5 rounded-xl transition-all" style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>{t.cancel}</button>
-            <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
-              {saving ? t.saving : t.save}
-            </button>
+          <div style={{ display: 'flex', gap: 10, paddingTop: 6 }}>
+            <button type="button" onClick={() => setModal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.2)', background: 'rgba(99,102,241,0.06)', color: 'rgba(148,163,184,0.8)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t.cancel}</button>
+            <button type="submit" disabled={saving} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving ? 'rgba(244,63,94,0.4)' : 'linear-gradient(135deg, #f43f5e, #e11d48)', color: 'white', fontWeight: 700, fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 15px rgba(244,63,94,0.35)' }}>{saving ? t.saving : t.save}</button>
           </div>
         </form>
       </Modal>
 
       {/* Other Expense Modal */}
       <Modal open={modal && activeTab !== 'Kitchen'} title={`${t.addExpenseFor} ${activeTab}`} onClose={() => setModal(false)}>
-        <form onSubmit={saveExpense} className="space-y-4">
-          <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 flex items-center gap-2" style={{ borderColor: 'var(--border)' }}>
-            <span className="text-xs text-slate-500">📅 {t.date}:</span>
-            <span className="text-sm font-semibold text-blue-400">{selectedDate || today}</span>
-            <span className="text-xs text-slate-500 ml-auto">{t.automatic}</span>
+        <form onSubmit={saveExpense} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', fontSize: 13, color: '#818cf8', display: 'flex', alignItems: 'center', gap: 8 }}>
+            📅 <span style={{ fontWeight: 700 }}>{selectedDate || today}</span><span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(148,163,184,0.5)' }}>{t.automatic}</span>
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.expenseSubcat}</label>
-            <select value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))} className={inputCls}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.expenseSubcat}</label>
+            <select value={form.subCategory} onChange={e => setForm(f => ({ ...f, subCategory: e.target.value }))} style={{ ...inp, appearance: 'none' }}>
               {(SUBCATS[activeTab] || []).map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.expenseDesc}</label>
-            <input type="text" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required placeholder="Sharaxaad..." className={inputCls}/>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.expenseDesc}</label>
+            <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required placeholder="Description..." style={inp}
+              onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)'}
+              onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
           </div>
           <div>
-            <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.amount}</label>
-            <input type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required placeholder="0.00" className={inputCls}/>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.amount}</label>
+            <input type="number" min="0.01" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required placeholder="0.00" style={inp}
+              onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)'}
+              onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setModal(false)} className="flex-1 text-sm font-medium py-2.5 rounded-xl transition-all" style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>{t.cancel}</button>
-            <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
-              {saving ? t.saving : t.save}
-            </button>
+          <div style={{ display: 'flex', gap: 10, paddingTop: 6 }}>
+            <button type="button" onClick={() => setModal(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.2)', background: 'rgba(99,102,241,0.06)', color: 'rgba(148,163,184,0.8)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t.cancel}</button>
+            <button type="submit" disabled={saving} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: saving ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 4px 15px rgba(99,102,241,0.35)' }}>{saving ? t.saving : t.save}</button>
           </div>
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirm */}
       <Modal open={confirmDelete !== null} title={t.deleteExpenseTitle} onClose={() => setConfirmDelete(null)}>
-        <div className="space-y-5">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: 16, background: 'rgba(244,63,94,0.06)', borderRadius: 14, border: '1px solid rgba(244,63,94,0.15)' }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(244,63,94,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><AlertTriangle style={{ width: 20, height: 20, color: '#f43f5e' }} /></div>
             <div>
-              <p className="font-semibold" style={{ color: 'var(--text)' }}>{t.areYouSure}</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                {t.deleteExpenseMsg}
-              </p>
-              <p className="text-xs mt-2 font-semibold px-2.5 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20">
-                {confirmDelete?.desc}
-              </p>
+              <p style={{ fontWeight: 700, color: 'white', marginBottom: 5 }}>{t.areYouSure}</p>
+              <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.8)', lineHeight: 1.5 }}>{t.deleteExpenseMsg}</p>
+              <p style={{ fontSize: 12, color: '#fb7185', marginTop: 6 }}>{confirmDelete?.desc}</p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button onClick={() => setConfirmDelete(null)} className="flex-1 text-sm font-medium py-2.5 rounded-xl transition-all" style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>
-              {t.cancel}
-            </button>
-            <button onClick={confirmAndDelete} disabled={deleting} className="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
-              {deleting ? t.deleting : <><Trash2 className="w-4 h-4" /> {t.confirm}</>}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.2)', background: 'rgba(99,102,241,0.06)', color: 'rgba(148,163,184,0.8)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t.cancel}</button>
+            <button onClick={confirmAndDelete} disabled={deleting} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: 'white', fontWeight: 700, fontSize: 13, cursor: deleting ? 'not-allowed' : 'pointer', boxShadow: '0 4px 15px rgba(244,63,94,0.3)' }}>
+              {deleting ? t.deleting : t.confirm}
             </button>
           </div>
         </div>
