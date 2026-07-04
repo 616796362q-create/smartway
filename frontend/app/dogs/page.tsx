@@ -327,7 +327,7 @@ export default function DogsPage() {
                   <tr key={d.id} style={{ borderBottom: '1px solid rgba(99,102,241,0.06)', transition: 'background 0.15s' }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(99,102,241,0.04)' : 'rgba(99,102,241,0.07)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <td style={{ padding: '14px 16px', fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>{d.breed}</td>
+                    <td style={{ padding: '14px 16px', fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>{d.name}</td>
                     <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.8)', fontWeight: 600 }}>{d.age} yrs</td>
                     <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.7)' }}>{d.vaccinationDate}</td>
                     <td style={{ padding: '14px 16px', fontWeight: 700, color: '#f43f5e' }}>${Number(d.medicalExpense).toFixed(2)}</td>
@@ -342,7 +342,7 @@ export default function DogsPage() {
                     <td style={{ padding: '14px 16px' }}>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => openEditDog(d)} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Pencil style={{ width: 13, height: 13 }} /></button>
-                        <button onClick={() => setConfirmDelete({ id: d.id, type: 'dog', desc: `${d.breed} (${d.id})` })} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 style={{ width: 13, height: 13 }} /></button>
+                        <button onClick={() => setConfirmDelete({ id: d.id, type: 'dog', desc: `${d.name} (${d.id})` })} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 style={{ width: 13, height: 13 }} /></button>
                       </div>
                     </td>
                   </tr>
