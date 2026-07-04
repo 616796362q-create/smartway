@@ -67,7 +67,7 @@ export default function DogsPage() {
   const [editing, setEditing] = useState<Dog | null>(null)
   const [cpEditing, setCpEditing] = useState<CheckpointLog | null>(null)
 
-  const [dogForm, setDogForm] = useState({ breed: '', age: '', vaccinationDate: '', medicalExpense: '0', status: 'Active' })
+  const [dogForm, setDogForm] = useState({ name: '', age: '', vaccinationDate: '', medicalExpense: '0', status: 'Active' })
   const [foodForm, setFoodForm] = useState({ cowMeat: '0', milk: '0', egg: '0' })
   const [cpForm, setCpForm] = useState({
     location: '',
@@ -109,12 +109,12 @@ export default function DogsPage() {
   // Dog handlers
   const openAddDog = () => {
     setEditing(null)
-    setDogForm({ breed: '', age: '', vaccinationDate: today, medicalExpense: '0', status: 'Active' })
+    setDogForm({ name: '', age: '', vaccinationDate: today, medicalExpense: '0', status: 'Active' })
     setDogModal(true)
   }
   const openEditDog = (d: Dog) => {
     setEditing(d)
-    setDogForm({ breed: d.breed, age: String(d.age), vaccinationDate: d.vaccinationDate, medicalExpense: String(d.medicalExpense), status: d.status })
+    setDogForm({ name: d.name, age: String(d.age), vaccinationDate: d.vaccinationDate, medicalExpense: String(d.medicalExpense), status: d.status })
     setDogModal(true)
   }
   const saveDog = async (e: React.FormEvent) => {
@@ -539,7 +539,7 @@ export default function DogsPage() {
       <Modal open={dogModal} title={editing ? t.editDogTitle : t.addDogTitle} onClose={() => setDogModal(false)}>
         <form onSubmit={saveDog} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.breed}</label><input value={dogForm.breed} onChange={e => setDogForm(f => ({ ...f, breed: e.target.value }))} required placeholder="German Shepherd" className={inputCls} /></div>
+            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.name}</label><input value={dogForm.name} onChange={e => setDogForm(f => ({ ...f, name: e.target.value }))} required placeholder="German Shepherd" className={inputCls} /></div>
             <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.age}</label><input type="number" min="0" value={dogForm.age} onChange={e => setDogForm(f => ({ ...f, age: e.target.value }))} required className={inputCls} /></div>
           </div>
           <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.vaccination}</label><input type="date" value={dogForm.vaccinationDate} onChange={e => setDogForm(f => ({ ...f, vaccinationDate: e.target.value }))} required className={inputCls} /></div>
