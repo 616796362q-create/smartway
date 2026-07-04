@@ -147,7 +147,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
 
       {/* ── Mobile overlay ── */}
       {sidebarOpen && (
@@ -247,7 +247,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Main ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
         {/* Header */}
         <header style={{
           height: 64, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16,
@@ -309,7 +309,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '24px', overflowX: 'hidden' }}>
+        <main style={{ flex: 1, padding: '24px', overflowY: 'auto', overflowX: 'hidden' }}>
           <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             {children}
           </div>

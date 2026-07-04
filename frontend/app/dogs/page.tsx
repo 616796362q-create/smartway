@@ -5,7 +5,7 @@ import { useApp } from '@/lib/AppContext'
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api'
 import { Plus, Pencil, Trash2, X, Beef, Milk, Egg, Shield, MapPin, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
 
-interface Dog { id: string; breed: string; age: number; vaccinationDate: string; medicalExpense: number; status: string }
+interface Dog { id: string; name: string; age: number; vaccinationDate: string; medicalExpense: number; status: string }
 interface DogFood { id: string; date: string; cowMeat: number; milk: number; egg: number; total: number }
 interface Staff { id: string; name: string; position: string; status: string }
 interface CheckpointLog {
@@ -46,10 +46,9 @@ const CP_BADGE: Record<string, string> = {
 }
 
 const ipt = (theme: string) =>
-  `w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:opacity-40 ${
-    theme === 'light'
-      ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-blue-500'
-      : 'bg-slate-900 border border-slate-600 text-white focus:border-blue-500'
+  `w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:opacity-40 ${theme === 'light'
+    ? 'bg-slate-50 border border-slate-300 text-slate-900 focus:border-blue-500'
+    : 'bg-slate-900 border border-slate-600 text-white focus:border-blue-500'
   }`
 
 export default function DogsPage() {
@@ -60,14 +59,14 @@ export default function DogsPage() {
   const [checkpointLogs, setCheckpointLogs] = useState<CheckpointLog[]>([])
   const [tab, setTab] = useState<'dogs' | 'food' | 'checkpoint'>('dogs')
   const [selectedDate, setSelectedDate] = useState('')
-  
+
   const [dogModal, setDogModal] = useState(false)
   const [foodModal, setFoodModal] = useState(false)
   const [cpModal, setCpModal] = useState(false)
-  
+
   const [editing, setEditing] = useState<Dog | null>(null)
   const [cpEditing, setCpEditing] = useState<CheckpointLog | null>(null)
-  
+
   const [dogForm, setDogForm] = useState({ breed: '', age: '', vaccinationDate: '', medicalExpense: '0', status: 'Active' })
   const [foodForm, setFoodForm] = useState({ cowMeat: '0', milk: '0', egg: '0' })
   const [cpForm, setCpForm] = useState({
@@ -79,7 +78,7 @@ export default function DogsPage() {
     selectedDogs: [] as string[],
     selectedStaff: [] as string[]
   })
-  
+
   const [saving, setSaving] = useState(false)
 
   // Unified deletion modal state
@@ -122,11 +121,11 @@ export default function DogsPage() {
     e.preventDefault(); setSaving(true)
     try {
       const payload = { ...dogForm, username: getUser().username || 'admin' }
-      const d = editing 
+      const d = editing
         ? await apiPut(`/dogs/${editing.id}`, payload)
         : await apiPost('/dogs', payload)
       if (d.success) { setDogs(d.dogs); setDogModal(false) }
-    } catch {}
+    } catch { }
     setSaving(false)
   }
 
@@ -136,7 +135,7 @@ export default function DogsPage() {
     try {
       const d = await apiPost('/dog-food', { ...foodForm, date: today, username: getUser().username || 'admin' })
       if (d.success) { setDogFood(d.dogFood); setFoodModal(false) }
-    } catch {}
+    } catch { }
     setSaving(false)
   }
 
@@ -144,7 +143,7 @@ export default function DogsPage() {
   const openAddCheckpoint = () => {
     setCpEditing(null)
     const now = new Date()
-    const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+    const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     setCpForm({
       location: '',
       date: selectedDate || today,
@@ -189,12 +188,12 @@ export default function DogsPage() {
         setCheckpointLogs(d.checkpointLogs)
         setCpModal(false)
       }
-    } catch {}
+    } catch { }
     setSaving(false)
   }
   const handleMarkReturned = async (log: CheckpointLog) => {
     const now = new Date()
-    const hhmm = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+    const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     try {
       const payload = {
         ...log,
@@ -204,7 +203,7 @@ export default function DogsPage() {
       }
       const d = await apiPut(`/checkpoint-logs/${log.id}`, payload)
       if (d.success) setCheckpointLogs(d.checkpointLogs)
-    } catch {}
+    } catch { }
   }
 
   const confirmAndDelete = async () => {
@@ -223,7 +222,7 @@ export default function DogsPage() {
         if (d.success) setCheckpointLogs(d.checkpointLogs)
       }
       setConfirmDelete(null)
-    } catch {}
+    } catch { }
     setDeleting(false)
   }
 
@@ -313,37 +312,45 @@ export default function DogsPage() {
 
         {/* Dogs table */}
         {tab === 'dogs' && (
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <table className="w-full text-sm">
+        <div style={{ borderRadius: 20, overflow: 'hidden', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', border: '1px solid rgba(99,102,241,0.12)' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: isLight ? 'var(--bg-card2)' : 'rgba(15,23,42,0.5)' }}>
-                  {[t.dogId, t.breed, t.age, t.vaccination, t.medicalExp, t.status, t.actions].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                <tr style={{ background: isLight ? '#f1f5ff' : 'rgba(99,102,241,0.06)', borderBottom: '1px solid rgba(99,102,241,0.1)' }}>
+                  {[t.name, t.age, t.vaccination, t.medicalExp, t.status, t.actions].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '14px 16px', fontSize: 11, fontWeight: 700, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/20">
+              <tbody>
                 {dogs.map(d => (
-                  <tr key={d.id} className="transition-colors" style={{ borderBottom: '1px solid var(--border2)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
-                    <td className="px-4 py-3 font-mono text-xs text-blue-400">{d.id}</td>
-                    <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text)' }}>{d.breed}</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{d.age} sano</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--text-muted)' }}>{d.vaccinationDate}</td>
-                    <td className="px-4 py-3 text-red-400 font-semibold">${Number(d.medicalExpense).toFixed(2)}</td>
-                    <td className="px-4 py-3"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${BADGE[d.status]||''}`}>{getDogStatusLabel(d.status)}</span></td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button onClick={() => openEditDog(d)} className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center justify-center"><Pencil className="w-3.5 h-3.5"/></button>
-                        <button onClick={() => setConfirmDelete({ id: d.id, type: 'dog', desc: `${d.breed} (${d.id})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
+                  <tr key={d.id} style={{ borderBottom: '1px solid rgba(99,102,241,0.06)', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(99,102,241,0.04)' : 'rgba(99,102,241,0.07)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <td style={{ padding: '14px 16px', fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>{d.breed}</td>
+                    <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.8)', fontWeight: 600 }}>{d.age} yrs</td>
+                    <td style={{ padding: '14px 16px', color: 'rgba(148,163,184,0.7)' }}>{d.vaccinationDate}</td>
+                    <td style={{ padding: '14px 16px', fontWeight: 700, color: '#f43f5e' }}>${Number(d.medicalExpense).toFixed(2)}</td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700,
+                        background: d.status === 'Active' ? 'rgba(16,185,129,0.12)' : d.status === 'Sick' ? 'rgba(244,63,94,0.12)' : 'rgba(100,116,139,0.12)',
+                        color: d.status === 'Active' ? '#10b981' : d.status === 'Sick' ? '#f43f5e' : '#64748b',
+                        border: `1px solid ${d.status === 'Active' ? 'rgba(16,185,129,0.25)' : d.status === 'Sick' ? 'rgba(244,63,94,0.25)' : 'rgba(100,116,139,0.2)'}`,
+                      }}>{getDogStatusLabel(d.status)}</span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => openEditDog(d)} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Pencil style={{ width: 13, height: 13 }} /></button>
+                        <button onClick={() => setConfirmDelete({ id: d.id, type: 'dog', desc: `${d.breed} (${d.id})` })} style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 style={{ width: 13, height: 13 }} /></button>
                       </div>
                     </td>
                   </tr>
                 ))}
-                {dogs.length === 0 && <tr><td colSpan={7} className="text-center py-10" style={{ color: 'var(--text-dim)' }}>{t.noDogsRegistered}</td></tr>}
+                {dogs.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 48, color: 'rgba(100,116,139,0.6)' }}>{t.noDogsRegistered}</td></tr>}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
@@ -352,12 +359,12 @@ export default function DogsPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: t.cowMeatLabel, icon: Beef, color: 'text-red-400', val: dogFood.reduce((s,f)=>s+Number(f.cowMeat),0) },
-                { label: t.milkLabel, icon: Milk, color: 'text-blue-300', val: dogFood.reduce((s,f)=>s+Number(f.milk),0) },
-                { label: t.eggLabel, icon: Egg, color: 'text-yellow-400', val: dogFood.reduce((s,f)=>s+Number(f.egg),0) },
+                { label: t.cowMeatLabel, icon: Beef, color: 'text-red-400', val: dogFood.reduce((s, f) => s + Number(f.cowMeat), 0) },
+                { label: t.milkLabel, icon: Milk, color: 'text-blue-300', val: dogFood.reduce((s, f) => s + Number(f.milk), 0) },
+                { label: t.eggLabel, icon: Egg, color: 'text-yellow-400', val: dogFood.reduce((s, f) => s + Number(f.egg), 0) },
               ].map(({ label, icon: Icon, color, val }) => (
                 <div key={label} className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-                  <div className="flex items-center gap-2 mb-2"><Icon className={`w-4 h-4 ${color}`}/><span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span></div>
+                  <div className="flex items-center gap-2 mb-2"><Icon className={`w-4 h-4 ${color}`} /><span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span></div>
                   <p className={`text-xl font-bold ${color}`}>${val.toFixed(2)}</p>
                 </div>
               ))}
@@ -389,7 +396,7 @@ export default function DogsPage() {
                       <td className="px-4 py-3 text-yellow-400">${Number(f.egg).toFixed(2)}</td>
                       <td className="px-4 py-3 font-bold text-emerald-400">${Number(f.total).toFixed(2)}</td>
                       <td className="px-4 py-3">
-                        <button onClick={() => setConfirmDelete({ id: f.id, type: 'food', desc: `Food Log (${f.date}): $${Number(f.total).toFixed(2)}` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
+                        <button onClick={() => setConfirmDelete({ id: f.id, type: 'food', desc: `Food Log (${f.date}): $${Number(f.total).toFixed(2)}` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -407,7 +414,7 @@ export default function DogsPage() {
             <div className="flex items-center gap-3 rounded-2xl p-4 flex-wrap" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
               <label className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{t.selectDate}</label>
               <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
-                className={inputCls} style={{ width: 'auto' }}/>
+                className={inputCls} style={{ width: 'auto' }} />
               {selectedDate !== today && (
                 <button onClick={() => setSelectedDate(today)}
                   className="text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 font-medium px-3 py-2 rounded-xl transition-all cursor-pointer">
@@ -446,19 +453,19 @@ export default function DogsPage() {
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
                           <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text)' }}>{log.date}</td>
                           <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text)' }}>
-                            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0"/>{log.location}</div>
+                            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />{log.location}</div>
                           </td>
                           <td className="px-4 py-3 max-w-[200px] truncate" style={{ color: 'var(--text-muted)' }} title={resolvedDogs}>{resolvedDogs || '—'}</td>
                           <td className="px-4 py-3 max-w-[200px] truncate" style={{ color: 'var(--text-muted)' }} title={resolvedStaff}>{resolvedStaff || '—'}</td>
-                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500"/>{log.dispatchTime}</div></td>
+                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500" />{log.dispatchTime}</div></td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2">
                               <button onClick={() => handleMarkReturned(log)} title={t.markReturned}
                                 className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 flex items-center gap-1 text-xs font-semibold transition-all">
-                                <CheckCircle2 className="w-3.5 h-3.5"/> {t.markReturned}
+                                <CheckCircle2 className="w-3.5 h-3.5" /> {t.markReturned}
                               </button>
-                              <button onClick={() => openEditCheckpoint(log)} className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center justify-center"><Pencil className="w-3.5 h-3.5"/></button>
-                              <button onClick={() => setConfirmDelete({ id: log.id, type: 'checkpoint', desc: `Checkpoint (${log.location})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
+                              <button onClick={() => openEditCheckpoint(log)} className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => setConfirmDelete({ id: log.id, type: 'checkpoint', desc: `Checkpoint (${log.location})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
                           </td>
                         </tr>
@@ -502,16 +509,16 @@ export default function DogsPage() {
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}>
                           <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'var(--text)' }}>{log.date}</td>
                           <td className="px-4 py-3 font-semibold" style={{ color: 'var(--text)' }}>
-                            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0"/>{log.location}</div>
+                            <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />{log.location}</div>
                           </td>
                           <td className="px-4 py-3 max-w-[200px] truncate" style={{ color: 'var(--text-muted)' }} title={resolvedDogs}>{resolvedDogs || '—'}</td>
                           <td className="px-4 py-3 max-w-[200px] truncate" style={{ color: 'var(--text-muted)' }} title={resolvedStaff}>{resolvedStaff || '—'}</td>
-                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500"/>{log.dispatchTime}</div></td>
-                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-emerald-500"/>{log.returnTime}</div></td>
+                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-500" />{log.dispatchTime}</div></td>
+                          <td className="px-4 py-3 font-mono" style={{ color: 'var(--text)' }}><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-emerald-500" />{log.returnTime}</div></td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2">
-                              <button onClick={() => openEditCheckpoint(log)} className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center justify-center"><Pencil className="w-3.5 h-3.5"/></button>
-                              <button onClick={() => setConfirmDelete({ id: log.id, type: 'checkpoint', desc: `Checkpoint (${log.location})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5"/></button>
+                              <button onClick={() => openEditCheckpoint(log)} className="w-7 h-7 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center justify-center"><Pencil className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => setConfirmDelete({ id: log.id, type: 'checkpoint', desc: `Checkpoint (${log.location})` })} className="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center"><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
                           </td>
                         </tr>
@@ -532,14 +539,14 @@ export default function DogsPage() {
       <Modal open={dogModal} title={editing ? t.editDogTitle : t.addDogTitle} onClose={() => setDogModal(false)}>
         <form onSubmit={saveDog} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.breed}</label><input value={dogForm.breed} onChange={e=>setDogForm(f=>({...f,breed:e.target.value}))} required placeholder="German Shepherd" className={inputCls}/></div>
-            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.age}</label><input type="number" min="0" value={dogForm.age} onChange={e=>setDogForm(f=>({...f,age:e.target.value}))} required className={inputCls}/></div>
+            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.breed}</label><input value={dogForm.breed} onChange={e => setDogForm(f => ({ ...f, breed: e.target.value }))} required placeholder="German Shepherd" className={inputCls} /></div>
+            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.age}</label><input type="number" min="0" value={dogForm.age} onChange={e => setDogForm(f => ({ ...f, age: e.target.value }))} required className={inputCls} /></div>
           </div>
-          <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.vaccination}</label><input type="date" value={dogForm.vaccinationDate} onChange={e=>setDogForm(f=>({...f,vaccinationDate:e.target.value}))} required className={inputCls}/></div>
+          <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.vaccination}</label><input type="date" value={dogForm.vaccinationDate} onChange={e => setDogForm(f => ({ ...f, vaccinationDate: e.target.value }))} required className={inputCls} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.medicalExp}</label><input type="number" min="0" value={dogForm.medicalExpense} onChange={e=>setDogForm(f=>({...f,medicalExpense:e.target.value}))} className={inputCls}/></div>
+            <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.medicalExp}</label><input type="number" min="0" value={dogForm.medicalExpense} onChange={e => setDogForm(f => ({ ...f, medicalExpense: e.target.value }))} className={inputCls} /></div>
             <div><label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.status}</label>
-              <select value={dogForm.status} onChange={e=>setDogForm(f=>({...f,status:e.target.value}))} className={inputCls}>
+              <select value={dogForm.status} onChange={e => setDogForm(f => ({ ...f, status: e.target.value }))} className={inputCls}>
                 <option value="Active">{t.active}</option>
                 <option value="Inactive">{t.inactive}</option>
                 <option value="Sick">Xanuunsan</option>
@@ -563,25 +570,25 @@ export default function DogsPage() {
           </div>
           <div className="space-y-3">
             <div className="flex items-center gap-3 bg-slate-900 rounded-xl p-3 border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-              <Beef className="w-5 h-5 text-red-400 shrink-0"/>
+              <Beef className="w-5 h-5 text-red-400 shrink-0" />
               <div className="flex-1"><p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.cowMeatLabel}</p></div>
-              <input type="number" min="0" step="0.01" value={foodForm.cowMeat} onChange={e=>setFoodForm(f=>({...f,cowMeat:e.target.value}))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }}/>
+              <input type="number" min="0" step="0.01" value={foodForm.cowMeat} onChange={e => setFoodForm(f => ({ ...f, cowMeat: e.target.value }))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }} />
             </div>
             <div className="flex items-center gap-3 bg-slate-900 rounded-xl p-3 border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-              <Milk className="w-5 h-5 text-blue-300 shrink-0"/>
+              <Milk className="w-5 h-5 text-blue-300 shrink-0" />
               <div className="flex-1"><p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.milkLabel}</p></div>
-              <input type="number" min="0" step="0.01" value={foodForm.milk} onChange={e=>setFoodForm(f=>({...f,milk:e.target.value}))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }}/>
+              <input type="number" min="0" step="0.01" value={foodForm.milk} onChange={e => setFoodForm(f => ({ ...f, milk: e.target.value }))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }} />
             </div>
             <div className="flex items-center gap-3 bg-slate-900 rounded-xl p-3 border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-              <Egg className="w-5 h-5 text-yellow-400 shrink-0"/>
+              <Egg className="w-5 h-5 text-yellow-400 shrink-0" />
               <div className="flex-1"><p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.eggLabel}</p></div>
-              <input type="number" min="0" step="0.01" value={foodForm.egg} onChange={e=>setFoodForm(f=>({...f,egg:e.target.value}))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }}/>
+              <input type="number" min="0" step="0.01" value={foodForm.egg} onChange={e => setFoodForm(f => ({ ...f, egg: e.target.value }))} className="w-24 border rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 text-right" style={{ backgroundColor: 'var(--bg-card2)', color: 'var(--text)', borderColor: 'var(--border)' }} />
             </div>
           </div>
           <div className="border rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--bg-card2, var(--bg-hover))', borderColor: 'var(--border)' }}>
             <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{t.total}</p>
             <p className="text-2xl font-bold text-emerald-400">
-              ${((parseFloat(foodForm.cowMeat)||0)+(parseFloat(foodForm.milk)||0)+(parseFloat(foodForm.egg)||0)).toFixed(2)}
+              ${((parseFloat(foodForm.cowMeat) || 0) + (parseFloat(foodForm.milk) || 0) + (parseFloat(foodForm.egg) || 0)).toFixed(2)}
             </p>
           </div>
           <div className="flex gap-3 pt-2">
@@ -607,11 +614,11 @@ export default function DogsPage() {
           </div>
           <div>
             <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.location}</label>
-            <input value={cpForm.location} onChange={e=>setCpForm(f=>({...f,location:e.target.value}))} required placeholder="Tusaale: Madaxtooyada ama Jazeera" className={inputCls}/>
+            <input value={cpForm.location} onChange={e => setCpForm(f => ({ ...f, location: e.target.value }))} required placeholder="Tusaale: Madaxtooyada ama Jazeera" className={inputCls} />
           </div>
           <div>
             <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>{t.status}</label>
-            <select value={cpForm.status} onChange={e=>setCpForm(f=>({...f,status:e.target.value as 'Dispatched' | 'Returned'}))} className={inputCls}>
+            <select value={cpForm.status} onChange={e => setCpForm(f => ({ ...f, status: e.target.value as 'Dispatched' | 'Returned' }))} className={inputCls}>
               <option value="Dispatched">{getCPStatusLabel('Dispatched')}</option>
               <option value="Returned">{getCPStatusLabel('Returned')}</option>
             </select>
@@ -623,7 +630,7 @@ export default function DogsPage() {
               {dogs.map(d => (
                 <label key={d.id} className="flex items-center gap-2 text-sm hover:text-white cursor-pointer select-none" style={{ color: 'var(--text)' }}>
                   <input type="checkbox" checked={cpForm.selectedDogs.includes(d.id)} onChange={() => toggleSelectDog(d.id)}
-                    className="rounded border-slate-600 text-blue-600 focus:ring-blue-500/20 bg-slate-800"/>
+                    className="rounded border-slate-600 text-blue-600 focus:ring-blue-500/20 bg-slate-800" />
                   <span>{d.breed} <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>({d.id})</span></span>
                 </label>
               ))}
@@ -637,7 +644,7 @@ export default function DogsPage() {
               {staff.map(s => (
                 <label key={s.id} className="flex items-center gap-2 text-sm hover:text-white cursor-pointer select-none" style={{ color: 'var(--text)' }}>
                   <input type="checkbox" checked={cpForm.selectedStaff.includes(s.id)} onChange={() => toggleSelectStaff(s.id)}
-                    className="rounded border-slate-600 text-blue-600 focus:ring-blue-500/20 bg-slate-800"/>
+                    className="rounded border-slate-600 text-blue-600 focus:ring-blue-500/20 bg-slate-800" />
                   <span>{s.name} <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>({s.position})</span></span>
                 </label>
               ))}
