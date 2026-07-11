@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -33,6 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [time, setTime]               = useState('')
   const [date, setDate]               = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const mainRef = useRef<HTMLElement | null>(null)
 
   const isLight = theme === 'light'
 
@@ -56,6 +57,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id)
   }, [router, tick])
 
+  useLayoutEffect(() => {
+    const scrollToTop = () => {
+      mainRef.current?.scrollTo(0, 0)
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+
+    scrollToTop()
+    const frame = requestAnimationFrame(scrollToTop)
+    const timeout = window.setTimeout(scrollToTop, 60)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timeout)
+    }
+  }, [pathname])
+
   const logout = () => { localStorage.removeItem('sw_user'); router.push('/login') }
 
   if (!user) return (
@@ -78,7 +97,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   /* ── Sidebar Content ── */
   const SidebarNav = ({ mobile = false }: { mobile?: boolean }) => (
-    <nav style={{ padding: '8px 12px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
+    <nav style={{ padding: '8px 12px', flex: '0 0 auto', overflow: 'visible' }}>
       <div style={{ marginBottom: 8, padding: '0 8px' }}>
         <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(148,163,184,0.4)', textTransform: 'uppercase' }}>{lang === 'so' ? 'Maamulka' : 'Navigation'}</p>
       </div>
@@ -114,7 +133,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   )
 
   const SidebarFooter = () => (
-    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
       <button onClick={toggleTheme} style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: 12,
         padding: '10px 12px', borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -147,7 +166,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
+    <div style={{ display: 'flex', height: '100dvh', minHeight: 0, overflow: 'hidden', background: 'var(--bg-base)' }}>
 
       {/* ── Mobile overlay ── */}
       {sidebarOpen && (
@@ -158,8 +177,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Mobile Sidebar ── */}
       <aside style={{
-        position: 'fixed', top: 0, left: 0, height: '100%', width: 256, zIndex: 50,
-        display: 'flex', flexDirection: 'column',
+        position: 'fixed', top: 0, left: 0, height: '100dvh', maxHeight: '100dvh', width: 256, zIndex: 50,
+        display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain',
         background: isLight ? '#0f172a' : 'linear-gradient(180deg, #0a0f1e 0%, #070b14 100%)',
         borderRight: '1px solid rgba(99,102,241,0.12)',
         transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -209,7 +228,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         width: 256, flexShrink: 0, display: 'flex', flexDirection: 'column',
         background: isLight ? '#0f172a' : 'linear-gradient(180deg, #0a0f1e 0%, #070b14 100%)',
         borderRight: '1px solid rgba(99,102,241,0.12)',
-        position: 'sticky', top: 0, height: '100vh', overflow: 'hidden',
+        position: 'sticky', top: 0, height: '100dvh', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain',
       }}
         className="hidden lg:flex"
       >
@@ -247,14 +266,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Main ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, height: '100dvh', overflow: 'hidden' }}>
         {/* Header */}
         <header style={{
           height: 64, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16,
           background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(7,11,20,0.9)',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(99,102,241,0.12)',
-          position: 'sticky', top: 0, zIndex: 30,
+          position: 'sticky', top: 0, zIndex: 30, flexShrink: 0,
         }}>
           {/* Mobile menu btn */}
           <button onClick={() => setSidebarOpen(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
@@ -309,7 +328,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto', overflowX: 'hidden' }}>
+        <main key={pathname} ref={mainRef} style={{ flex: 1, minHeight: 0, padding: '24px', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', scrollbarGutter: 'stable' }}>
           <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             {children}
           </div>

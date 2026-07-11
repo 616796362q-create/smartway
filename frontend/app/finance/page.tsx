@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
 import { apiGet, apiPost, apiDelete } from '@/lib/api'
-import { Plus, Trash2, X, TrendingUp, TrendingDown, DollarSign, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, X, TrendingUp, TrendingDown, DollarSign, AlertTriangle, Calendar } from 'lucide-react'
 
 interface Income { id: string; date: string; source: string; description: string; amount: number }
 
@@ -34,21 +34,45 @@ export default function FinancePage() {
 
   const isLight = theme === 'light'
   const getUser = () => { try { return JSON.parse(localStorage.getItem('sw_user') || '{}') } catch { return {} } }
-  const today = new Date().toISOString().split('T')[0]
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  const today = formatDate(new Date())
+  const currentMonth = today.slice(0, 7)
+  const [monthFilter, setMonthFilterState] = useState(() => {
+    if (typeof window === 'undefined') return currentMonth
+    const saved = localStorage.getItem('sw_selected_month')
+    return saved && /^\d{4}-\d{2}$/.test(saved) ? saved : currentMonth
+  })
 
-  const load = async () => {
+  const setSelectedMonth = (month: string) => {
+    const nextMonth = month || currentMonth
+    setMonthFilterState(nextMonth)
+    localStorage.setItem('sw_selected_month', nextMonth)
+    localStorage.setItem('sw_report_date', `${nextMonth}-01`)
+  }
+
+  const load = async (selectedMonth = monthFilter) => {
     try {
-      const [i, s] = await Promise.all([apiGet('/income'), apiGet('/dashboard/stats')])
+      const [i, s] = await Promise.all([apiGet('/income'), apiGet(`/dashboard/stats?month=${selectedMonth}`)])
       setIncome(i || []); setStats(s)
     } catch { setIncome([]); setStats(null) }
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [monthFilter])
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true)
     try {
       const d = await apiPost('/income', { ...form, username: getUser().username || 'admin' })
-      if (d.success) { await load(); setModal(false) }
+      if (d.success) {
+        const savedMonth = form.date ? form.date.slice(0, 7) : monthFilter
+        setSelectedMonth(savedMonth)
+        await load(savedMonth)
+        setModal(false)
+      }
     } catch {}
     setSaving(false)
   }
@@ -65,6 +89,7 @@ export default function FinancePage() {
   }
 
   const pl = stats?.profitLoss || 0
+  const filteredIncome = income.filter(item => (item.date || '').slice(0, 7) === monthFilter)
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 13, fontWeight: 500,
@@ -113,6 +138,25 @@ export default function FinancePage() {
           </button>
         </div>
 
+        <div style={{
+          background: isLight ? 'white' : 'rgba(13,20,36,0.8)',
+          border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: 16, padding: '14px 18px',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap'
+        }}>
+          <Calendar style={{ width: 16, height: 16, color: '#10b981' }} />
+          <label style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 700 }}>Bisha income-ka:</label>
+          <input type="month" value={monthFilter} onChange={e => setSelectedMonth(e.target.value || currentMonth)}
+            style={{ ...inp, width: 'auto', padding: '8px 12px' }} />
+          {monthFilter !== currentMonth && (
+            <button onClick={() => setSelectedMonth(currentMonth)} style={{
+              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+              borderRadius: 10, color: '#10b981', padding: '7px 12px', fontSize: 12,
+              cursor: 'pointer', fontWeight: 700
+            }}>Bishan</button>
+          )}
+        </div>
+
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           {summaryCards.map((c, i) => (
@@ -154,7 +198,7 @@ export default function FinancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {income.map((item, i) => (
+                  {filteredIncome.map((item, i) => (
                     <tr key={item.id} style={{ borderBottom: '1px solid rgba(99,102,241,0.06)', transition: 'background 0.15s' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = isLight ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.07)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
@@ -168,7 +212,7 @@ export default function FinancePage() {
                       </td>
                     </tr>
                   ))}
-                  {income.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 48, color: 'rgba(100,116,139,0.6)' }}>{t.noIncome}</td></tr>}
+                  {filteredIncome.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 48, color: 'rgba(100,116,139,0.6)' }}>{t.noIncome}</td></tr>}
                 </tbody>
               </table>
             </div>

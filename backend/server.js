@@ -227,6 +227,70 @@ app.post('/api/payroll', async (req, res) => {
   }
 });
 
+app.put('/api/payroll/:id', async (req, res) => {
+  const { id } = req.params;
+  const { staffId, month, overtime, bonus, deduction, username } = req.body;
+  try {
+    const existingRes = await db.query('SELECT id FROM payroll WHERE id = $1', [id]);
+    if (!existingRes.rows[0]) {
+      return res.status(404).json({ success: false, message: 'Diiwaanka mushaarka lama helin!' });
+    }
+
+    const staffRes = await db.query('SELECT name, salary FROM staff WHERE id = $1', [staffId]);
+    const staffMember = staffRes.rows[0];
+    if (!staffMember) {
+      return res.status(404).json({ success: false, message: 'Staff-ka la doortay lama helin!' });
+    }
+
+    const duplicateRes = await db.query(
+      'SELECT id FROM payroll WHERE "staffId" = $1 AND month = $2 AND id <> $3',
+      [staffId, month, id]
+    );
+    if (duplicateRes.rows[0]) {
+      return res.status(409).json({ success: false, message: 'Shaqaalahan mushaarkiisa bishan horay ayaa loo geliyay!' });
+    }
+
+    const basicSalary = parseFloat(staffMember.salary) || 0;
+    const otVal = parseFloat(overtime) || 0;
+    const bonusVal = parseFloat(bonus) || 0;
+    const dedVal = parseFloat(deduction) || 0;
+    const netSalary = basicSalary + otVal + bonusVal - dedVal;
+
+    await db.query(
+      `UPDATE payroll
+       SET "staffId" = $1, "staffName" = $2, month = $3, "basicSalary" = $4, overtime = $5, bonus = $6, deduction = $7, "netSalary" = $8
+       WHERE id = $9`,
+      [staffId, staffMember.name, month, basicSalary, otVal, bonusVal, dedVal, netSalary, id]
+    );
+    await logActivity(username, `Wax ka bedelay mushaarka ${staffMember.name} ee bisha ${month}`);
+
+    const allPayroll = await db.query('SELECT * FROM payroll ORDER BY id DESC');
+    res.json({ success: true, payroll: allPayroll.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/payroll/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username } = req.query;
+  try {
+    const payRes = await db.query('SELECT "staffName", month, "netSalary" FROM payroll WHERE id = $1', [id]);
+    const pay = payRes.rows[0];
+    if (!pay) {
+      return res.status(404).json({ success: false, message: 'Diiwaanka mushaarka lama helin!' });
+    }
+
+    await db.query('DELETE FROM payroll WHERE id = $1', [id]);
+    await logActivity(username, `Masaxay mushaarka ${pay.staffName} ee bisha ${pay.month} ($${pay.netSalary})`);
+
+    const allPayroll = await db.query('SELECT * FROM payroll ORDER BY id DESC');
+    res.json({ success: true, payroll: allPayroll.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 4. Expenses Management
 app.get('/api/expenses', async (req, res) => {
   try {
@@ -684,58 +748,49 @@ app.get('/api/dashboard/stats', async (req, res) => {
     const totalVehicles = vehiclesCountRes.rows[0].count;
 
     // 4. Payroll calculations
-    const today = new Date();
-    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    // Allow filtering by ?month=YYYY-MM. Fallback uses Nairobi month for the business timezone.
+    const selectedMonth = req.query.month || new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Nairobi',
+      year: 'numeric',
+      month: '2-digit'
+    }).format(new Date());
 
-    // Get current month net salary sum
-    const currentMonthPayrollRes = await db.query('SELECT SUM("netSalary")::numeric as sum FROM payroll WHERE month = $1', [currentMonthStr]);
-    let latestPayroll = parseFloat(currentMonthPayrollRes.rows[0].sum) || 0;
-    let activePayrollMonth = currentMonthStr;
+    // Get selected month net salary sum
+    const monthlyPayrollRes = await db.query('SELECT SUM("netSalary")::numeric as sum FROM payroll WHERE month = $1', [selectedMonth]);
+    const latestPayroll = parseFloat(monthlyPayrollRes.rows[0].sum) || 0;
 
-    if (latestPayroll === 0) {
-      // Find the latest month with any payroll records
-      const latestMonthRes = await db.query('SELECT month, SUM("netSalary")::numeric as sum FROM payroll GROUP BY month ORDER BY month DESC LIMIT 1');
-      if (latestMonthRes.rows[0]) {
-        activePayrollMonth = latestMonthRes.rows[0].month;
-        latestPayroll = parseFloat(latestMonthRes.rows[0].sum) || 0;
-      }
-    }
-
-    // 5. Expense summaries
-    const kitchenExpensesRes = await db.query('SELECT SUM(amount)::numeric as sum FROM kitchen_daily');
+    // 5. Expense summaries for the selected month
+    const kitchenExpensesRes = await db.query('SELECT SUM(amount)::numeric as sum FROM kitchen_daily WHERE LEFT(date, 7) = $1', [selectedMonth]);
     const kitchenExpenses = parseFloat(kitchenExpensesRes.rows[0].sum) || 0;
 
-    const dogFoodExpensesRes = await db.query('SELECT SUM(total)::numeric as sum FROM dog_food');
+    const dogFoodExpensesRes = await db.query('SELECT SUM(total)::numeric as sum FROM dog_food WHERE LEFT(date, 7) = $1', [selectedMonth]);
     const dogFoodExpenses = parseFloat(dogFoodExpensesRes.rows[0].sum) || 0;
 
-    const dogMedicalExpensesRes = await db.query('SELECT SUM("medicalExpense")::numeric as sum FROM dogs');
-    const dogMedicalExpenses = parseFloat(dogMedicalExpensesRes.rows[0].sum) || 0;
-    const dogsExpenses = dogFoodExpenses + dogMedicalExpenses;
+    // Monthly dashboard totals should only include expenses entered with dates in the selected month.
+    const dogMedicalExpenses = 0;
+    const dogsExpenses = dogFoodExpenses;
+    const vehicleExpenses = 0;
 
-    // Vehicles expenses
-    const vehicleExpensesRes = await db.query('SELECT SUM("fuelCost" + "serviceCost" + "repairCost")::numeric as sum FROM vehicles');
-    const vehicleExpenses = parseFloat(vehicleExpensesRes.rows[0].sum) || 0;
+    const expenseGroupsRes = await db.query(
+      'SELECT category, SUM(amount)::numeric as sum FROM expenses WHERE LEFT(date, 7) = $1 GROUP BY category',
+      [selectedMonth]
+    );
+    const expenseGroups = expenseGroupsRes.rows.reduce((acc, row) => {
+      acc[String(row.category || '').toLowerCase()] = parseFloat(row.sum) || 0;
+      return acc;
+    }, {});
+    const categorySum = (...names) => names.reduce((sum, name) => sum + (expenseGroups[name.toLowerCase()] || 0), 0);
 
-    // Categorized general expenses
-    const fuelExpensesRes = await db.query("SELECT SUM(amount)::numeric as sum FROM expenses WHERE category = 'Fuel'");
-    const fuelExpenses = parseFloat(fuelExpensesRes.rows[0].sum) || 0;
+    const fuelExpenses = categorySum('Fuel', 'Shidaal');
+    const repairExpenses = categorySum('Repairs', 'Repair', 'Dayactir');
+    const utilityExpenses = categorySum('Utilities', 'Utility', 'Adeegyada');
+    const otherExpenses = categorySum('Others', 'Other Expenses', 'Other', 'Kale');
 
-    const repairExpensesRes = await db.query("SELECT SUM(amount)::numeric as sum FROM expenses WHERE category = 'Repairs'");
-    const repairExpenses = parseFloat(repairExpensesRes.rows[0].sum) || 0;
+    // Total monthly expenses
+    const totalExpenses = latestPayroll + dogsExpenses + vehicleExpenses + kitchenExpenses + fuelExpenses + repairExpenses + utilityExpenses + otherExpenses;
 
-    const utilityExpensesRes = await db.query("SELECT SUM(amount)::numeric as sum FROM expenses WHERE category = 'Utilities'");
-    const utilityExpenses = parseFloat(utilityExpensesRes.rows[0].sum) || 0;
-
-    const otherExpensesRes = await db.query("SELECT SUM(amount)::numeric as sum FROM expenses WHERE category = 'Others' OR category = 'Other Expenses'");
-    const otherExpenses = parseFloat(otherExpensesRes.rows[0].sum) || 0;
-
-    const totalPayrollCostRes = await db.query('SELECT SUM("netSalary")::numeric as sum FROM payroll');
-    const totalPayrollCost = parseFloat(totalPayrollCostRes.rows[0].sum) || 0;
-
-    const totalExpenses = totalPayrollCost + dogsExpenses + vehicleExpenses + kitchenExpenses + fuelExpenses + repairExpenses + utilityExpenses + otherExpenses;
-
-    // Income
-    const totalIncomeRes = await db.query('SELECT SUM(amount)::numeric as sum FROM income');
+    // Income for the selected month
+    const totalIncomeRes = await db.query('SELECT SUM(amount)::numeric as sum FROM income WHERE LEFT(date, 7) = $1', [selectedMonth]);
     const totalIncome = parseFloat(totalIncomeRes.rows[0].sum) || 0;
 
     const profitLoss = totalIncome - totalExpenses;
@@ -745,12 +800,12 @@ app.get('/api/dashboard/stats', async (req, res) => {
       totalDogs,
       totalVehicles,
       monthlyPayroll: latestPayroll,
-      monthlyPayrollMonth: activePayrollMonth,
+      monthlyPayrollMonth: selectedMonth,
       totalExpenses,
       totalIncome,
       profitLoss,
       breakdown: {
-        payroll: totalPayrollCost,
+        payroll: latestPayroll,
         dogs: dogsExpenses,
         dogFood: dogFoodExpenses,
         dogMedical: dogMedicalExpenses,

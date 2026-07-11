@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
-import { apiGet, apiPost } from '@/lib/api'
-import { Plus, X, DollarSign, Users, TrendingUp, Calendar, ChevronRight, Banknote } from 'lucide-react'
+import { apiDelete, apiGet, apiPost, apiPut } from '@/lib/api'
+import { Plus, X, DollarSign, Users, TrendingUp, Calendar, ChevronRight, Banknote, Pencil, Trash2, AlertTriangle } from 'lucide-react'
 
 interface Staff { id: string; name: string; position: string; salary: number; status: string }
 interface PayrollRecord { id: string; staffId: string; staffName: string; month: string; basicSalary: number; overtime: number; bonus: number; deduction: number; netSalary: number }
@@ -42,11 +42,20 @@ export default function PayrollPage() {
   const { t, theme } = useApp()
   const [staff, setStaff] = useState<Staff[]>([])
   const [payroll, setPayroll] = useState<PayrollRecord[]>([])
-  const [monthFilter, setMonthFilter] = useState('')
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const [monthFilter, setMonthFilter] = useState(() => {
+    if (typeof window === 'undefined') return currentMonth
+    const saved = localStorage.getItem('sw_selected_month')
+    return saved && /^\d{4}-\d{2}$/.test(saved) ? saved : currentMonth
+  })
   const [modal, setModal] = useState(false)
   const [form, setForm] = useState({ staffId: '', month: '', overtime: '0', bonus: '0', deduction: '0' })
   const [basicSalary, setBasicSalary] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState<PayrollRecord | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<PayrollRecord | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const getUser = () => { try { return JSON.parse(localStorage.getItem('sw_user') || '{}') } catch { return {} } }
 
@@ -62,20 +71,38 @@ export default function PayrollPage() {
 
   useEffect(() => {
     if (form.staffId && form.month) {
-      const alreadyPaid = payroll.some(p => p.staffId === form.staffId && p.month === form.month)
+      const alreadyPaid = payroll.some(p => p.staffId === form.staffId && p.month === form.month && p.id !== editing?.id)
       if (alreadyPaid) {
         setForm(f => ({ ...f, staffId: '' }))
         setBasicSalary(0)
       }
     }
-  }, [form.month, form.staffId, payroll])
+  }, [editing?.id, form.month, form.staffId, payroll])
 
-  const now = new Date()
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const setSelectedMonth = (month: string) => {
+    const nextMonth = month || currentMonth
+    setMonthFilter(nextMonth)
+    localStorage.setItem('sw_selected_month', nextMonth)
+    localStorage.setItem('sw_report_date', `${nextMonth}-01`)
+  }
 
   const openModal = () => {
+    setEditing(null)
     setForm({ staffId: '', month: currentMonth, overtime: '0', bonus: '0', deduction: '0' })
     setBasicSalary(0)
+    setModal(true)
+  }
+
+  const openEdit = (record: PayrollRecord) => {
+    setEditing(record)
+    setForm({
+      staffId: record.staffId,
+      month: record.month,
+      overtime: String(record.overtime || 0),
+      bonus: String(record.bonus || 0),
+      deduction: String(record.deduction || 0)
+    })
+    setBasicSalary(Number(record.basicSalary) || 0)
     setModal(true)
   }
 
@@ -90,13 +117,26 @@ export default function PayrollPage() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true)
     try {
-      const d = await apiPost('/payroll', { ...form, username: getUser().username || 'admin' })
-      if (d.success) { setPayroll(d.payroll); setModal(false) }
+      const payload = { ...form, username: getUser().username || 'admin' }
+      const d = editing ? await apiPut(`/payroll/${editing.id}`, payload) : await apiPost('/payroll', payload)
+      if (d.success) { setPayroll(d.payroll); setModal(false); setEditing(null) }
     } catch {}
     setSaving(false)
   }
 
-  const filtered = monthFilter ? payroll.filter(p => p.month === monthFilter) : payroll
+  const confirmAndDelete = async () => {
+    if (!confirmDelete) return
+    setDeleting(true)
+    try {
+      const d = await apiDelete(`/payroll/${confirmDelete.id}`, getUser().username || 'admin')
+      if (d.success) setPayroll(d.payroll)
+      setConfirmDelete(null)
+    } catch {}
+    setDeleting(false)
+  }
+
+  const selectedPayrollMonth = monthFilter || currentMonth
+  const filtered = payroll.filter(p => p.month === selectedPayrollMonth)
   const totalNet = filtered.reduce((s, p) => s + (Number(p.netSalary) || 0), 0)
   const totalBonuses = filtered.reduce((s, p) => s + (Number(p.bonus) || 0), 0)
   const totalDeductions = filtered.reduce((s, p) => s + (Number(p.deduction) || 0), 0)
@@ -209,15 +249,15 @@ export default function PayrollPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Calendar className="w-4 h-4" style={{ color: '#6366f1' }} />
             <label style={{ fontSize: '13px', color: 'rgba(148,163,184,0.9)', fontWeight: 600 }}>Bisha:</label>
-            <input type="month" value={monthFilter} onChange={e => setMonthFilter(e.target.value)}
+            <input type="month" value={monthFilter} onChange={e => setSelectedMonth(e.target.value)}
               style={{ ...inputStyle, width: 'auto', padding: '8px 14px', fontSize: '13px' }} />
           </div>
-          {monthFilter && (
-            <button onClick={() => setMonthFilter('')} style={{
-              background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: '10px', color: '#f87171', padding: '6px 14px', fontSize: '12px',
+          {monthFilter !== currentMonth && (
+            <button onClick={() => setSelectedMonth(currentMonth)} style={{
+              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+              borderRadius: '10px', color: '#34d399', padding: '6px 14px', fontSize: '12px',
               cursor: 'pointer', fontWeight: 600
-            }}>✕ Nadiifi</button>
+            }}>Bishan</button>
           )}
         </div>
 
@@ -232,7 +272,7 @@ export default function PayrollPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
                 <tr style={{ background: 'rgba(99,102,241,0.08)', borderBottom: '1px solid rgba(99,102,241,0.15)' }}>
-                  {['ID', 'Magaca', 'Bisha', 'Mushaar Asal', 'Dheeraad', 'Haddiyad', 'Goyn', 'Mushaar Neto'].map((h, i) => (
+                  {['ID', 'Magaca', 'Bisha', 'Mushaar Asal', 'Dheeraad', 'Haddiyad', 'Goyn', 'Mushaar Neto', ''].map((h, i) => (
                     <th key={i} style={{
                       textAlign: 'left', padding: '14px 18px',
                       fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em',
@@ -276,11 +316,25 @@ export default function PayrollPage() {
                         borderRadius: '10px', padding: '5px 14px', display: 'inline-block'
                       }}>${Number(p.netSalary).toFixed(2)}</span>
                     </td>
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button onClick={() => openEdit(p)} title="Wax ka bedel" style={{
+                          width: 32, height: 32, borderRadius: 9, background: 'rgba(99,102,241,0.1)',
+                          border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        }}><Pencil style={{ width: 13, height: 13 }} /></button>
+                        <button onClick={() => setConfirmDelete(p)} title="Masax" style={{
+                          width: 32, height: 32, borderRadius: 9, background: 'rgba(244,63,94,0.1)',
+                          border: '1px solid rgba(244,63,94,0.22)', color: '#fb7185',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                        }}><Trash2 style={{ width: 13, height: 13 }} /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '60px 20px' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '60px 20px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                         <div style={{ background: 'rgba(99,102,241,0.1)', borderRadius: '50%', padding: '20px' }}>
                           <DollarSign className="w-8 h-8" style={{ color: 'rgba(99,102,241,0.5)' }} />
@@ -297,7 +351,7 @@ export default function PayrollPage() {
       </div>
 
       {/* ── Modal ── */}
-      <Modal open={modal} title={t.enterPayroll} onClose={() => setModal(false)}>
+      <Modal open={modal} title={editing ? 'Wax ka bedel Mushaar' : t.enterPayroll} onClose={() => { setModal(false); setEditing(null) }}>
         <form onSubmit={save} className="space-y-4">
 
           {/* Staff Select */}
@@ -312,8 +366,8 @@ export default function PayrollPage() {
               {staff
                 .filter(s => {
                   const isActive = s.status === 'Active' || s.status === 'Socda'
-                  const alreadyPaid = payroll.some(p => p.staffId === s.id && p.month === form.month)
-                  return isActive && !alreadyPaid
+                  const alreadyPaid = payroll.some(p => p.staffId === s.id && p.month === form.month && p.id !== editing?.id)
+                  return (isActive || s.id === editing?.staffId) && !alreadyPaid
                 })
                 .map(s => (
                   <option key={s.id} value={s.id} style={{ background: '#0f172a' }}>{s.name} ({s.position}) — ${s.salary}</option>
@@ -395,6 +449,44 @@ export default function PayrollPage() {
             to { opacity: 1; transform: translateY(0); }
           }
         `}</style>
+      </Modal>
+
+      <Modal open={confirmDelete !== null} title={t.deletePayrollTitle} onClose={() => setConfirmDelete(null)}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{
+            display: 'flex', gap: 14, alignItems: 'flex-start', padding: 16,
+            background: 'rgba(244,63,94,0.06)', borderRadius: 14, border: '1px solid rgba(244,63,94,0.15)'
+          }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 12, background: 'rgba(244,63,94,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <AlertTriangle style={{ width: 20, height: 20, color: '#f43f5e' }} />
+            </div>
+            <div>
+              <p style={{ fontWeight: 700, color: 'white', marginBottom: 5 }}>{t.areYouSure}</p>
+              <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.8)', lineHeight: 1.5 }}>{t.deletePayrollMsg}</p>
+              <p style={{ fontSize: 12, color: '#fb7185', marginTop: 6 }}>
+                {confirmDelete?.staffName} - {confirmDelete?.month} - ${Number(confirmDelete?.netSalary || 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => setConfirmDelete(null)} style={{
+              flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.2)',
+              background: 'rgba(99,102,241,0.06)', color: 'rgba(148,163,184,0.8)',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer'
+            }}>{t.cancel}</button>
+            <button onClick={confirmAndDelete} disabled={deleting} style={{
+              flex: 1, padding: '12px', borderRadius: 12, border: 'none',
+              background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: 'white',
+              fontWeight: 700, fontSize: 13, cursor: deleting ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 15px rgba(244,63,94,0.3)'
+            }}>
+              {deleting ? t.deleting : t.confirm}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <style>{`

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
 import { apiGet } from '@/lib/api'
-import { Users, Dog, Truck, CreditCard, TrendingUp, TrendingDown, DollarSign, Activity, ArrowUpRight } from 'lucide-react'
+import { Users, Dog, Truck, CreditCard, TrendingUp, TrendingDown, DollarSign, Activity, ArrowUpRight, Calendar } from 'lucide-react'
 
 interface Stats {
   totalStaff: number; totalDogs: number; totalVehicles: number
@@ -17,12 +17,43 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [activities, setActivities] = useState<{ id: string; timestamp: string; user: string; action: string }[]>([])
   const [loading, setLoading] = useState(true)
+  const currentMonth = (() => {
+    const today = new Date()
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  })()
+  const [monthFilter, setMonthFilterState] = useState(() => {
+    if (typeof window === 'undefined') return currentMonth
+    const saved = localStorage.getItem('sw_selected_month')
+    return saved && /^\d{4}-\d{2}$/.test(saved) ? saved : currentMonth
+  })
+
+  const setSelectedMonth = (month: string) => {
+    const nextMonth = month || currentMonth
+    setMonthFilterState(nextMonth)
+    localStorage.setItem('sw_selected_month', nextMonth)
+    localStorage.setItem('sw_report_date', `${nextMonth}-01`)
+  }
 
   useEffect(() => {
-    Promise.all([apiGet('/dashboard/stats'), apiGet('/activities')]).then(([s, a]) => {
-      setStats(s); setActivities(a || []); setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [])
+    const loadDashboard = () => {
+      Promise.all([apiGet(`/dashboard/stats?month=${monthFilter}`), apiGet('/activities')]).then(([s, a]) => {
+        setStats(s); setActivities(a || []); setLoading(false)
+      }).catch(() => setLoading(false))
+    }
+
+    loadDashboard()
+
+    const refreshWhenVisible = () => {
+      if (!document.hidden) loadDashboard()
+    }
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    window.addEventListener('focus', loadDashboard)
+
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+      window.removeEventListener('focus', loadDashboard)
+    }
+  }, [monthFilter])
 
   const isLight = theme === 'light'
 
@@ -56,9 +87,9 @@ export default function DashboardPage() {
     { label: t.activeStaff, value: stats?.totalStaff || 0, icon: Users, isNum: true, gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', glow: 'rgba(99,102,241,0.3)', badge: '+2 bishaas' },
     { label: t.dogsTitleDashboard, value: stats?.totalDogs || 0, icon: Dog, isNum: true, gradient: 'linear-gradient(135deg, #f43f5e, #e11d48)', glow: 'rgba(244,63,94,0.3)', badge: 'Active' },
     { label: t.vehiclesDashboard, value: stats?.totalVehicles || 0, icon: Truck, isNum: true, gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', glow: 'rgba(139,92,246,0.3)', badge: 'Ready' },
-    { label: `Mushaar — ${stats?.monthlyPayrollMonth || '—'}`, value: stats?.monthlyPayroll || 0, icon: CreditCard, isNum: false, gradient: 'linear-gradient(135deg, #10b981, #059669)', glow: 'rgba(16,185,129,0.3)', badge: 'Bishaas' },
-    { label: t.totalIncome, value: stats?.totalIncome || 0, icon: TrendingUp, isNum: false, gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)', glow: 'rgba(6,182,212,0.3)', badge: '↑' },
-    { label: t.totalExpenses, value: stats?.totalExpenses || 0, icon: TrendingDown, isNum: false, gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', glow: 'rgba(245,158,11,0.3)', badge: '↓' },
+    { label: `Mushaar - ${stats?.monthlyPayrollMonth || monthFilter}`, value: stats?.monthlyPayroll || 0, icon: CreditCard, isNum: false, gradient: 'linear-gradient(135deg, #10b981, #059669)', glow: 'rgba(16,185,129,0.3)', badge: 'Bisha' },
+    { label: `${t.totalIncome} - ${stats?.monthlyPayrollMonth || monthFilter}`, value: stats?.totalIncome || 0, icon: TrendingUp, isNum: false, gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)', glow: 'rgba(6,182,212,0.3)', badge: 'Bisha' },
+    { label: `${t.totalExpenses} - ${stats?.monthlyPayrollMonth || monthFilter}`, value: stats?.totalExpenses || 0, icon: TrendingDown, isNum: false, gradient: 'linear-gradient(135deg, #f59e0b, #d97706)', glow: 'rgba(245,158,11,0.3)', badge: 'Bisha' },
   ]
 
   return (
@@ -86,6 +117,30 @@ export default function DashboardPage() {
               <span style={{ fontSize: 13, color: 'white', fontWeight: 600 }}>Nidaamku waa shaqaynayaa</span>
             </div>
           </div>
+        </div>
+
+        <div style={{
+          background: isLight ? 'white' : 'rgba(13,20,36,0.8)',
+          border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: 16, padding: '14px 18px',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap'
+        }}>
+          <Calendar style={{ width: 16, height: 16, color: '#06b6d4' }} />
+          <label style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 700 }}>Bisha xogta dashboard-ka:</label>
+          <input type="month" value={monthFilter} onChange={e => setSelectedMonth(e.target.value || currentMonth)}
+            style={{
+              width: 'auto', padding: '8px 12px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+              background: isLight ? '#f8faff' : 'rgba(7,11,20,0.8)',
+              border: '1px solid rgba(99,102,241,0.2)', color: isLight ? '#0f172a' : 'white',
+              outline: 'none', fontFamily: 'inherit'
+            }} />
+          {monthFilter !== currentMonth && (
+            <button onClick={() => setSelectedMonth(currentMonth)} style={{
+              background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)',
+              borderRadius: 10, color: '#0891b2', padding: '7px 12px', fontSize: 12,
+              cursor: 'pointer', fontWeight: 700
+            }}>Bishan</button>
+          )}
         </div>
 
         {/* ── Stat Cards ── */}

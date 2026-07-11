@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/components/AppLayout'
 import { useApp } from '@/lib/AppContext'
 import { apiGet } from '@/lib/api'
-import { FileText, Download, Printer, TrendingUp, TrendingDown, DollarSign, Users, PawPrint, Truck } from 'lucide-react'
+import { FileText, Download, Printer, TrendingUp, TrendingDown, DollarSign, Users, PawPrint, Truck, Calendar } from 'lucide-react'
 
 interface Stats {
   totalStaff: number; totalDogs: number; totalVehicles: number
@@ -15,10 +15,33 @@ export default function ReportsPage() {
   const { t, theme } = useApp()
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  const todayDate = formatDate(new Date())
+  const [reportDate, setReportDateState] = useState(() => {
+    if (typeof window === 'undefined') return todayDate
+    const savedDate = localStorage.getItem('sw_report_date')
+    const savedMonth = localStorage.getItem('sw_selected_month')
+    if (savedDate && /^\d{4}-\d{2}-\d{2}$/.test(savedDate)) return savedDate
+    if (savedMonth && /^\d{4}-\d{2}$/.test(savedMonth)) return `${savedMonth}-01`
+    return todayDate
+  })
+  const monthFilter = reportDate.slice(0, 7)
+
+  const setSelectedReportDate = (date: string) => {
+    const nextDate = date || todayDate
+    setReportDateState(nextDate)
+    localStorage.setItem('sw_report_date', nextDate)
+    localStorage.setItem('sw_selected_month', nextDate.slice(0, 7))
+  }
 
   useEffect(() => {
-    apiGet('/dashboard/stats').then(d => { setStats(d); setLoading(false) }).catch(() => setLoading(false))
-  }, [])
+    apiGet(`/dashboard/stats?month=${monthFilter}`).then(d => { setStats(d); setLoading(false) }).catch(() => setLoading(false))
+  }, [monthFilter])
 
   const isLight = theme === 'light'
 
@@ -46,7 +69,7 @@ export default function ReportsPage() {
     const csv = rows.map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `SmartWay_Report_${new Date().toISOString().split('T')[0]}.csv`; a.click()
+    const a = document.createElement('a'); a.href = url; a.download = `SmartWay_Report_${monthFilter}.csv`; a.click()
   }
 
   if (loading) return (
@@ -110,6 +133,24 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', borderRadius: 16, border: '1px solid rgba(99,102,241,0.12)', flexWrap: 'wrap' }} className="print:hidden">
+          <Calendar style={{ width: 16, height: 16, color: '#1d4ed8' }} />
+          <label style={{ fontSize: 13, fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>Taariikhda report-ka:</label>
+          <input type="date" value={reportDate} onChange={e => setSelectedReportDate(e.target.value || todayDate)}
+            style={{
+              width: 'auto', padding: '8px 12px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+              background: isLight ? '#f8faff' : 'rgba(7,11,20,0.8)',
+              border: '1px solid rgba(99,102,241,0.2)', color: isLight ? '#0f172a' : 'white',
+              outline: 'none', fontFamily: 'inherit'
+            }} />
+          <span style={{ fontSize: 12, color: 'rgba(148,163,184,0.7)', fontWeight: 700 }}>Bisha: {monthFilter}</span>
+          {reportDate !== todayDate && (
+            <button onClick={() => setSelectedReportDate(todayDate)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#1d4ed8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              Maanta
+            </button>
+          )}
+        </div>
+
         {/* Summary metrics */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
           {rows.map((r, i) => (
@@ -154,7 +195,7 @@ export default function ReportsPage() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', gap: 10, background: isLight ? '#f8faff' : 'rgba(99,102,241,0.06)' }}>
               <FileText style={{ width: 16, height: 16, color: '#6366f1' }} />
               <span style={{ fontWeight: 700, color: isLight ? '#0f172a' : 'white', fontSize: 14 }}>{t.companyReportHeader}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'rgba(148,163,184,0.6)' }}>{t.reportDateLabel} {new Date().toLocaleDateString()}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'rgba(148,163,184,0.6)' }}>Date: {reportDate} - Bisha: {monthFilter}</span>
             </div>
             <div style={{ padding: '6px 0' }}>
               {expBreakdown.map((row, i) => (

@@ -54,9 +54,31 @@ export default function ExpensesPage() {
 
   const isLight = theme === 'light'
   const getUser = () => { try { return JSON.parse(localStorage.getItem('sw_user') || '{}') } catch { return {} } }
-  const today = new Date().toISOString().split('T')[0]
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  const today = formatDate(new Date())
   const tabs = TABS(t)
   const activeColor = tabs.find(tb => tb.key === activeTab)?.color || '#6366f1'
+
+  const getSavedDate = () => {
+    if (typeof window === 'undefined') return today
+    const savedDate = localStorage.getItem('sw_report_date')
+    const savedMonth = localStorage.getItem('sw_selected_month')
+    if (savedDate && /^\d{4}-\d{2}-\d{2}$/.test(savedDate)) return savedDate
+    if (savedMonth && /^\d{4}-\d{2}$/.test(savedMonth)) return `${savedMonth}-01`
+    return today
+  }
+
+  const setSharedDate = (date: string) => {
+    const nextDate = date || today
+    setSelectedDate(nextDate)
+    localStorage.setItem('sw_report_date', nextDate)
+    localStorage.setItem('sw_selected_month', nextDate.slice(0, 7))
+  }
 
   const load = async () => {
     try {
@@ -64,7 +86,7 @@ export default function ExpensesPage() {
       setExpenses(e || []); setKitchenDaily(k || [])
     } catch { setExpenses([]); setKitchenDaily([]) }
   }
-  useEffect(() => { load(); setSelectedDate(today) }, [])
+  useEffect(() => { load(); setSharedDate(getSavedDate()) }, [])
 
   const openModal = () => {
     if (activeTab === 'Kitchen') setKitForm({ amount: '', note: '' })
@@ -170,11 +192,11 @@ export default function ExpensesPage() {
         {/* Date filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: isLight ? 'white' : 'rgba(13,20,36,0.8)', borderRadius: 16, border: '1px solid rgba(99,102,241,0.12)', flexWrap: 'wrap' }}>
           <label style={{ fontSize: 13, fontWeight: 700, color: isLight ? '#0f172a' : 'white' }}>{t.selectDate}</label>
-          <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ ...inp, width: 'auto', padding: '8px 12px' }}
+          <input type="date" value={selectedDate} onChange={e => setSharedDate(e.target.value)} style={{ ...inp, width: 'auto', padding: '8px 12px' }}
             onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.5)'}
             onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(99,102,241,0.2)'} />
           {selectedDate !== today && (
-            <button onClick={() => setSelectedDate(today)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818cf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => setSharedDate(today)} style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818cf8', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               {t.returnToToday}
             </button>
           )}
