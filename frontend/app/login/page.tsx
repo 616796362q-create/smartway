@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       const res = await apiPost('/auth/login', { username, password })
       if (res.success) {
-        localStorage.setItem('sw_user', JSON.stringify(res.user))
+        localStorage.setItem('sw_user', JSON.stringify({ ...res.user, _loginTime: Date.now() }))
         router.push('/dashboard')
       } else {
         setError(t.loginError)

@@ -372,13 +372,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.setItem('sw_lang', 'so')
     }
-    // Force new Blue+White brand theme once
-    if (localStorage.getItem('sw_brand') !== 'v2') {
-      localStorage.setItem('sw_brand', 'v2')
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme)
+    } else {
       localStorage.setItem('sw_theme', 'light')
       setTheme('light')
-    } else if (savedTheme) {
-      setTheme(savedTheme)
     }
   }, [])
 

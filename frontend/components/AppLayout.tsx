@@ -8,6 +8,7 @@ import {
   Sun, Moon, ChevronRight, Languages
 } from 'lucide-react'
 import { useApp } from '@/lib/AppContext'
+import { pingBackend } from '@/lib/api'
 
 const NAV_ITEMS = [
   { href: '/dashboard', labelKey: 'dashboard' as const, icon: LayoutDashboard, roles: ['Admin','Manager','Accountant'], color: '#6366f1' },
@@ -49,9 +50,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
+    // Wake up backend (Neon DB free tier auto-suspends)
+    pingBackend().catch(() => {})
+
     const stored = localStorage.getItem('sw_user')
     if (!stored) { router.push('/login'); return }
-    setUser(JSON.parse(stored))
+    try {
+      const parsed = JSON.parse(stored)
+      // Check session age - expire after 8 hours
+      if (parsed._loginTime && Date.now() - parsed._loginTime > 8 * 60 * 60 * 1000) {
+        localStorage.removeItem('sw_user')
+        router.push('/login')
+        return
+      }
+      setUser(parsed)
+    } catch {
+      localStorage.removeItem('sw_user')
+      router.push('/login')
+      return
+    }
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
