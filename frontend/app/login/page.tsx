@@ -13,10 +13,8 @@ export default function LoginPage() {
   const [showPw,   setShowPw]   = useState(false)
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
-  const [waking,   setWaking]   = useState(true)
-
   useEffect(() => {
-    pingBackend().finally(() => setWaking(false))
+    pingBackend().catch(() => {})
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -144,19 +142,7 @@ export default function LoginPage() {
               <p style={{ fontSize: 13, color: isLight ? '#64748b' : 'rgba(148,163,184,0.7)' }}>{t.loginSub}</p>
             </div>
 
-            {waking && (
-              <div style={{
-                marginBottom: 16, padding: '10px 14px', borderRadius: 12,
-                background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
-                display: 'flex', alignItems: 'center', gap: 8, fontSize: 12,
-                color: isLight ? '#6366f1' : '#a5b4fc',
-              }}>
-                <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />
-                Server la xidayo... fadlan sug
-              </div>
-            )}
-
-            {error && (
+             {error && (
               <div style={{
                 marginBottom: 16, padding: '10px 14px', borderRadius: 12,
                 background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)',
@@ -194,20 +180,19 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <button type="submit" disabled={loading || waking} style={{
+              <button type="submit" disabled={loading} style={{
                 width: '100%', padding: '15px', borderRadius: 14, border: 'none',
-                background: (loading || waking) ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                color: 'white', fontWeight: 700, fontSize: 15, cursor: (loading || waking) ? 'not-allowed' : 'pointer',
+                background: loading ? 'rgba(99,102,241,0.4)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                color: 'white', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s', letterSpacing: '-0.2px',
-                boxShadow: (loading || waking) ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 4,
               }}
-                onMouseEnter={e => { if (!loading && !waking) { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(99,102,241,0.5)' } }}
+                onMouseEnter={e => { if (!loading) { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(99,102,241,0.5)' } }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(99,102,241,0.4)' }}
               >
                 {loading
                   ? <><div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.7s linear infinite' }} /> Galaya...</>
-                  : waking ? <><div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.7s linear infinite' }} /> Server la xidayo...</>
                   : t.loginButton}
               </button>
             </form>
