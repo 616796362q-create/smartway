@@ -1,23 +1,26 @@
-export const API = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').trim()
-
-// Timeout wrapper: abort if request takes longer than ms
-function withTimeout(promise: Promise<Response>, ms = 20000): Promise<Response> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), ms)
-  return promise.finally(() => clearTimeout(timer))
+// In the browser use the Next.js /api proxy (avoids CORS + works without env vars).
+// On the server (SSR/build) use the full backend URL from env.
+function getApiBase(): string {
+  if (typeof window !== 'undefined') return '/api'
+  return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/$/, '')
 }
 
-// Retry a fetch up to `retries` times with exponential backoff
+export const API = getApiBase()
+
+const REQUEST_TIMEOUT_MS = 45000
+const MAX_RETRIES = 3
+const RETRY_DELAY_MS = 2000
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
-  retries = 2,
-  delayMs = 1500
+  retries = MAX_RETRIES,
+  delayMs = RETRY_DELAY_MS
 ): Promise<Response> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 20000)
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
       const res = await fetch(url, { ...options, signal: controller.signal })
       clearTimeout(timer)
       return res
@@ -61,15 +64,23 @@ export async function apiDelete(path: string, username?: string) {
   return res.json()
 }
 
-// Ping the backend to wake up the Neon DB (free tier auto-suspends)
-// Call this early in the app lifecycle (e.g. layout or login page)
+// Wake up the backend serverless function + Neon DB (free tier auto-suspends)
 export async function pingBackend(): Promise<boolean> {
-  try {
-    const controller = new AbortController()
-    setTimeout(() => controller.abort(), 30000)
-    const res = await fetch(`${API}/auth/users`, { signal: controller.signal, cache: 'no-store' })
-    return res.ok
-  } catch {
-    return false
+  const attempts = [
+    `${API}/health`,
+    `${API}/auth/users`,
+  ]
+
+  for (const url of attempts) {
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' })
+      clearTimeout(timer)
+      if (res.ok) return true
+    } catch {
+      // Try next endpoint
+    }
   }
+  return false
 }

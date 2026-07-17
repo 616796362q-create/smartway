@@ -45,6 +45,11 @@ async function logActivity(user, action) {
 
 // --- API ROUTES ---
 
+// Health check — no DB required (fast wake-up for serverless)
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, timestamp: new Date().toISOString() });
+});
+
 // 1. Authentication
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -827,7 +832,13 @@ app.get('*', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`SmartWay Security System running on http://localhost:${PORT}`);
-  logActivity('System', 'Server started successfully.');
-});
+// Vercel serverless expects the Express app to be exported
+module.exports = app;
+
+// Local development only
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`SmartWay Security System running on http://localhost:${PORT}`);
+    logActivity('System', 'Server started successfully.');
+  });
+}
