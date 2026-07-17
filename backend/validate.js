@@ -44,7 +44,10 @@ console.log('✅ PASS: data.json schema structure is valid.');
 const TEST_PORT = 3050;
 process.env.PORT = TEST_PORT; // Override port
 
-const server = require('./server.js'); // Starts the server
+const app = require('./server.js'); // Imports the Express app
+const server = app.listen(TEST_PORT, () => {
+  console.log(`Test server started on http://localhost:${TEST_PORT}`);
+});
 
 // Give it 1 second to start
 setTimeout(async () => {
@@ -52,11 +55,11 @@ setTimeout(async () => {
     console.log('\nStarting API endpoints checks...');
 
     // A. Validate Auth Endpoint
-    const authPayload = JSON.stringify({ username: 'admin', password: 'admin123' });
+    const authPayload = JSON.stringify({ username: 'Emre', password: '1234' });
     const authRes = await makeRequest(`http://localhost:${TEST_PORT}/api/auth/login`, 'POST', authPayload);
     
     if (!authRes || !authRes.success || authRes.user.role !== 'Admin') {
-      throw new Error('Auth endpoint failed: Unable to login as admin.');
+      throw new Error(`Auth endpoint failed: Unable to login as admin. Response: ${JSON.stringify(authRes)}`);
     }
     console.log('✅ PASS: /api/auth/login endpoint successful.');
 
@@ -98,10 +101,12 @@ setTimeout(async () => {
     console.log('\n====================================================');
     console.log('🎉 ALL TESTS PASSED SUCCESSFULLY! SmartWay is ready.');
     console.log('====================================================');
+    server.close();
     process.exit(0);
 
   } catch (err) {
-    console.error('\n❌ VALIDATION TEST FAILED:', err.message);
+    console.error('\n❌ VALIDATION TEST FAILED:', err);
+    if (server) server.close();
     process.exit(1);
   }
 }, 1500);
