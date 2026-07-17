@@ -99,6 +99,71 @@ app.get('/api/auth/users', async (req, res) => {
   }
 });
 
+// Create user
+app.post('/api/auth/users', async (req, res) => {
+  const { username, password, role, name, requestUser } = req.body;
+  try {
+    const lastRes = await db.query("SELECT id FROM users ORDER BY id DESC LIMIT 1");
+    const last = lastRes.rows[0];
+    let nextNum = 1;
+    if (last && last.id) {
+      const match = last.id.match(/USR-(\d+)/);
+      if (match) nextNum = parseInt(match[1]) + 1;
+    }
+    const id = `USR-${String(nextNum).padStart(3,'0')}`;
+    await db.query(
+      'INSERT INTO users (id, username, password, role, name) VALUES ($1,$2,$3,$4,$5)',
+      [id, username, password, role, name]
+    );
+    await logActivity(requestUser || 'Admin', `Created user account: ${username} (${role})`);
+    const result = await db.query('SELECT id, username, role, name FROM users');
+    res.json({ success: true, users: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Edit user
+app.put('/api/auth/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username, password, role, name, requestUser } = req.body;
+  try {
+    if (password) {
+      await db.query(
+        'UPDATE users SET username=$1, password=$2, role=$3, name=$4 WHERE id=$5',
+        [username, password, role, name, id]
+      );
+    } else {
+      await db.query(
+        'UPDATE users SET username=$1, role=$2, name=$3 WHERE id=$4',
+        [username, role, name, id]
+      );
+    }
+    await logActivity(requestUser || 'Admin', `Updated user account: ${username} (${role})`);
+    const result = await db.query('SELECT id, username, role, name FROM users');
+    res.json({ success: true, users: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete user
+app.delete('/api/auth/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const requestUser = req.query.username || 'Admin';
+  try {
+    const userRes = await db.query('SELECT username FROM users WHERE id=$1', [id]);
+    const username = userRes.rows[0]?.username || id;
+    await db.query('DELETE FROM users WHERE id=$1', [id]);
+    await logActivity(requestUser, `Deleted user account: ${username}`);
+    const result = await db.query('SELECT id, username, role, name FROM users');
+    res.json({ success: true, users: result.rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 // 2. Staff Management
 app.get('/api/staff', async (req, res) => {
   try {
