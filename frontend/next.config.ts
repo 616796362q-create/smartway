@@ -8,7 +8,7 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const backendUrl =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === "production"
-    ? "https://backend-alpha-one-68.vercel.app/api"
+    ? "https://backend-liard-three-15.vercel.app/api"
     : "http://localhost:3000/api");
 // Strip trailing /api if present to get base URL for rewrites
 const backendBase = backendUrl.endsWith("/api")
